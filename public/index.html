@@ -1,0 +1,120 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Pañcāṅga</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2em auto; }
+    #messages { border: 1px solid #ccc; height: 400px; overflow-y: auto; padding: .5em; }
+    .message { margin-bottom: .5em; }
+    .panchanga { background: #f0f8ff; padding: .5em; border-radius: 4px; }
+    label { display: block; margin: .5em 0; }
+    input, select, button { padding: .4em; margin-right: .5em; }
+  </style>
+</head>
+<body>
+  <h2>Calculate Panchanga</h2>
+  <div id="messages"></div>
+
+  <label>Your Name:<br/><input id="user" placeholder="Enter your name" /></label>
+  <label>Date & Time:<br/>
+    <input id="date" type="date" />
+    <input id="time" type="time" />
+  </label>
+  <label>Timezone:<br/><input id="tz" placeholder="e.g. America/New_York" /></label>
+  <label>Place (lat,lon):<br/><input id="place" placeholder="Latitude,Longitude" /></label>
+
+  <label>Ayanāmsa:<br/>
+    <select id="ayanamsa">
+      <option value="0">Fagan/Bradley</option>
+      <option value="1" selected>Lahiri</option>
+      <option value="2">DeLu</option>
+      <option value="3">Raman</option>
+      <option value="4">Krishnamurti</option>
+      <option value="6">ED50</option>
+      <option value="7">Dehant</option>
+    </select>
+  </label>
+
+  <button id="sendPanchanga">Calculate Panchanga</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket     = io();
+    const messages   = document.getElementById('messages');
+    const userInput  = document.getElementById('user');
+    const dateInput  = document.getElementById('date');
+    const timeInput  = document.getElementById('time');
+    const tzInput    = document.getElementById('tz');
+    const placeInput = document.getElementById('place');
+    const ayanInput  = document.getElementById('ayanamsa');
+    const btn        = document.getElementById('sendPanchanga');
+
+    function appendMessage(html) {
+      const d = document.createElement('div');
+      d.classList.add('message');
+      d.innerHTML = html;
+      messages.appendChild(d);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    // prefill
+    document.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      dateInput.value = now.toISOString().slice(0,10);
+      timeInput.value = now.toTimeString().slice(0,5);
+      tzInput.value   = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          placeInput.value = `${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`;
+        });
+      }
+    });
+
+    btn.addEventListener('click', () => {
+      socket.emit('calculatePanchanga', {
+        user:     userInput.value,
+        date:     dateInput.value,
+        time:     timeInput.value,
+        timezone: tzInput.value,
+        place:    placeInput.value,
+        ayanamsa: ayanInput.value
+      });
+    });
+
+    socket.on('panchangaCalculated', data => {
+      console.log('Payload:', data);
+      const {
+        user, date, time, timezone, place, ayanamsaUsed,
+        sunrise, sunset, tithi, nakshatra, yoga, karana1, karana2,
+        paksha, weekday, amantaMonth, purnimantaMonth, moonSign, sunSign
+      } = data;
+
+      appendMessage(`
+        <div class="panchanga">
+          <strong>${user}</strong>'s Pañcāṅga for ${date} ${time} (${timezone}) @ ${place}:<br/>
+          • Ayanāmsa: ${ayanamsaUsed}<br/>
+          • Sunrise: ${sunrise}<br/>
+          • Sunset: ${sunset}<br/>
+          • Tithi: ${tithi.name} up to ${tithi.endTime}<br/>
+          • Nakṣatra: ${nakshatra.name} up to ${nakshatra.endTime}<br/>
+          • Yoga: ${yoga.name} up to ${yoga.endTime}<br/>
+          • Karana 1: ${karana1.name} up to ${karana1.endTime}<br/>
+          • Karana 2: ${karana2.name} up to ${karana2.endTime}<br/>
+          • Pakṣa: ${paksha}<br/>
+          • Vāra: ${weekday}<br/>
+          • Amanta Month: ${amantaMonth}<br/>
+          • Pūrṇimanta Month: ${purnimantaMonth}<br/>
+          • Moon Sign: ${moonSign}<br/>
+          • Sun Sign: ${sunSign}<br/>
+        </div>
+      `);
+    });
+
+    socket.on('errorMessage', msg => {
+      appendMessage(`<span style="color:red;">Error: ${msg}</span>`);
+    });
+  </script>
+</body>
+</html>

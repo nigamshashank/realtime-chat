@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Vedic Horoscope Calculator</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .form-section {
+      flex: 1;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .chart-section {
+      flex: 2;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1, h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+    
+    button:hover {
+      background: #45a049;
+    }
+    
+    .north-indian-chart-container {
+      position: relative;
+      width: 600px;
+      height: 600px;
+      margin: 20px auto;
+      border: 2px solid #333;
+    }
+    
+    .north-indian-chart {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="100" height="100" stroke="black" fill="transparent" stroke-width="1"/><line x1="0" y1="0" x2="100" y2="100" stroke="black" stroke-width="1"/><line x1="100" y1="0" x2="0" y2="100" stroke="black" stroke-width="1"/><line x1="0" y1="50" x2="50" y2="0" stroke="black" stroke-width="1"/><line x1="50" y1="0" x2="100" y2="50" stroke="black" stroke-width="1"/><line x1="100" y1="50" x2="50" y2="100" stroke="black" stroke-width="1"/><line x1="50" y1="100" x2="0" y2="50" stroke="black" stroke-width="1"/></svg>');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    
+    /* North Indian Chart - True Geometric House Positions */
+    .ni-house { width: 18%; height: 18%; position: absolute; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 15px; background: rgba(255,255,255,0.85); border-radius: 8px; pointer-events: none; }
+    /* Center diamond (H1/Lagna) */
+    .ni-house-1 { top: 8%; left: 40%; }
+    /* Top triangle (H2) */
+    .ni-house-2 { top: 1%; left: 15%; }
+    /* Top-right kite (H3) */
+    .ni-house-3 { top: 10%; left: 1%; }
+    /* Right triangle (H4) */
+    .ni-house-4 { top: 45%; left: 15%; }
+    /* Bottom-right kite (H5) */
+    .ni-house-5 { top: 66%; left: 1%; }
+    /* Bottom triangle (H6) */
+    .ni-house-6 { top: 85%; left: 15%; }
+    /* Bottom-left kite (H7) */
+    .ni-house-7 { top: 66%; left: 40%; }
+    /* Left triangle (H8) */
+    .ni-house-8 { top: 85%; left: 65%; }
+    /* Top-left kite (H9) */
+    .ni-house-9 { top: 66%; left: 85%; }
+    /* Top-left corner (H10) */
+    .ni-house-10 { top: 45%; left: 65%; }
+    /* Top-right corner (H11) */
+    .ni-house-11 { top: 10%; left: 85%; }
+    /* Bottom-right corner (H12) */
+    .ni-house-12 { top: 1%; left: 65%; }
+    
+    .ni-house .sign {
+      font-weight: bold;
+      color: #e53935;
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+    
+    .ni-house .planets {
+      font-size: 11px;
+      line-height: 1.2;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
+    }
+    
+    .ni-house .planet {
+      display: inline-block;
+      background: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 3px;
+      margin: 0;
+      font-weight: bold;
+      border: 1px solid #ccc;
+    }
+
+    .lagna-house {
+      font-weight: bold;
+      /* background-color: rgba(255, 255, 0, 0.1); */
+    }
+    .lagna-house .sign {
+      color: #000;
+      text-decoration: underline;
+    }
+
+    .planet-list {
+      margin-top: 20px;
+    }
+    
+    .planet-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .retrograde {
+      color: red;
+      font-weight: bold;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .error {
+      color: red;
+      background: #ffe6e6;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Vedic Horoscope Calculator</h1>
+  
+  <div class="container">
+    <div class="form-section">
+      <h2>Birth Details</h2>
+      <form id="horoscopeForm">
+        <div class="form-group">
+          <label for="name">Full Name:</label>
+          <input type="text" id="name" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="dateOfBirth">Date of Birth:</label>
+          <input type="date" id="dateOfBirth" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="timeOfBirth">Time of Birth:</label>
+          <input type="time" id="timeOfBirth" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="placeOfBirth">Place of Birth:</label>
+          <input type="text" id="placeOfBirth" placeholder="e.g., Mumbai, India" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="latitude">Latitude:</label>
+          <input type="text" id="latitude" placeholder="e.g., 19.0760N or -19.0760" required>
+          <small style="color: #666;">Format: 19.0760N (North) or -19.0760 (South)</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="longitude">Longitude:</label>
+          <input type="text" id="longitude" placeholder="e.g., 72.8777E or -72.8777" required>
+          <small style="color: #666;">Format: 72.8777E (East) or -72.8777 (West)</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="timezone">Timezone:</label>
+          <input type="text" id="timezone" placeholder="e.g., Asia/Kolkata" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="ayanamsa">Ayanamsa:</label>
+          <select id="ayanamsa">
+            <option value="1" selected>Lahiri</option>
+            <option value="0">Fagan/Bradley</option>
+            <option value="2">DeLu</option>
+            <option value="3">Raman</option>
+            <option value="4">Krishnamurti</option>
+            <option value="6">ED50</option>
+            <option value="7">Dehant</option>
+          </select>
+        </div>
+        
+        <button type="submit">Calculate Horoscope</button>
+      </form>
+    </div>
+    
+    <div class="chart-section">
+      <h2>Birth Chart (Kundali)</h2>
+      <div id="loading" class="loading" style="display: none;">Calculating horoscope...</div>
+      <div id="error" class="error" style="display: none;"></div>
+      
+      <div id="chartContainer" style="display: none;">
+        <div class="north-indian-chart-container">
+          <div class="north-indian-chart" id="northIndianChart">
+            <!-- Houses will be dynamically generated here -->
+          </div>
+        </div>
+        
+        <div class="planet-list" id="planetList"></div>
+        
+        <div id="lagnaInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const form = document.getElementById('horoscopeForm');
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const chartContainer = document.getElementById('chartContainer');
+    const northIndianChart = document.getElementById('northIndianChart');
+    const planetList = document.getElementById('planetList');
+    const lagnaInfo = document.getElementById('lagnaInfo');
+
+    // Pre-fill form with current date/time and timezone
+    document.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      document.getElementById('dateOfBirth').value = now.toISOString().slice(0, 10);
+      document.getElementById('timeOfBirth').value = now.toTimeString().slice(0, 5);
+      document.getElementById('timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const formData = {
+        name: document.getElementById('name').value,
+        dateOfBirth: document.getElementById('dateOfBirth').value,
+        timeOfBirth: document.getElementById('timeOfBirth').value,
+        placeOfBirth: document.getElementById('placeOfBirth').value,
+        latitude: document.getElementById('latitude').value,
+        longitude: document.getElementById('longitude').value,
+        timezone: document.getElementById('timezone').value,
+        ayanamsa: document.getElementById('ayanamsa').value
+      };
+
+      // Show loading
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      chartContainer.style.display = 'none';
+
+      // Send to server
+      socket.emit('calculateHoroscope', formData);
+    });
+
+    socket.on('horoscopeCalculated', (data) => {
+      loading.style.display = 'none';
+      displayHoroscope(data);
+    });
+
+    socket.on('errorMessage', (msg) => {
+      loading.style.display = 'none';
+      error.textContent = msg;
+      error.style.display = 'block';
+    });
+
+    function displayHoroscope(data) {
+      chartContainer.style.display = 'block';
+      
+      // Display Lagna info
+      lagnaInfo.innerHTML = `
+        <h3>Lagna (Ascendant)</h3>
+        <p><strong>${data.lagna.sign}</strong> ${data.lagna.degree.toFixed(2)}°</p>
+        <p>Longitude: ${data.lagna.longitude.toFixed(2)}°</p>
+      `;
+
+      // North Indian house order: top center (Lagna), then anticlockwise
+      // [H1 (top center), H2 (top left), H3 (left), H4 (bottom left), H5 (bottom center), H6 (bottom right), H7 (right), H8 (top right), H9 (topmost right), H10 (rightmost), H11 (bottommost right), H12 (bottommost left)]
+      // For your chart, the main 12 boxes are: top center, top left, left, bottom left, bottom center, bottom right, right, top right, and the 4 corners.
+      // We'll use the order: [1,2,3,4,5,6,7,8,9,10,11,12] where 1 is top center (Lagna), then anticlockwise.
+      const houseOrder = [1,2,3,4,5,6,7,8,9,10,11,12];
+      const chart = document.getElementById('northIndianChart');
+      chart.innerHTML = '';
+
+      // Get Lagna rashi number
+      const lagnaRashi = data.lagna.signNumber;
+
+      houseOrder.forEach((houseNum, idx) => {
+        // Compute rashi number for this house (anticlockwise from Lagna)
+        const rashiNumber = ((lagnaRashi + idx - 1) % 12) + 1;
+        // Find all planets in this rashi, excluding Neptune, Uranus, Pluto
+        const planetNames = Object.entries(data.planets)
+          .filter(([pname, p]) => p.signNumber === rashiNumber && !['Neptune', 'Uranus', 'Pluto'].includes(pname))
+          .map(([pname, p]) => {
+            const retro = p.isRetrograde ? '(R)' : '';
+            return `<span class=\"planet\">${pname.substring(0, 2)}${retro}</span>`;
+          }).join(' ');
+        const houseDiv = document.createElement('div');
+        houseDiv.className = `ni-house ni-house-${houseNum}`;
+        if (houseNum === 1) houseDiv.classList.add('lagna-house');
+        houseDiv.innerHTML = `
+          <div class=\"sign\">${rashiNumber}</div>
+          <div class=\"planets\">${planetNames}</div>
+        `;
+        chart.appendChild(houseDiv);
+      });
+
+      // Display planet list, excluding Neptune, Uranus, Pluto
+      planetList.innerHTML = '<h3>Planetary Positions</h3>';
+      for (const [planet, info] of Object.entries(data.planets)) {
+        if (["Neptune", "Uranus", "Pluto"].includes(planet)) continue;
+        const retrograde = info.isRetrograde ? ' (R)' : '';
+        const planetDiv = document.createElement('div');
+        planetDiv.className = 'planet-item';
+        planetDiv.innerHTML = `
+          <span><strong>${planet}${retrograde}</strong></span>
+          <span>${info.sign} ${info.degree.toFixed(2)}°</span>
+        `;
+        planetList.appendChild(planetDiv);
+      }
+    }
+  </script>
+</body>
+</html> 

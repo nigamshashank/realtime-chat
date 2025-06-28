@@ -1,0 +1,329 @@
+// server.js
+const express    = require('express');
+const http       = require('http');
+const socketIo   = require('socket.io');
+const moment     = require('moment-timezone');
+const mongoose   = require('mongoose');
+const swisseph   = require('swisseph');
+const SunCalc    = require('suncalc');
+const path       = require('path');
+
+const { computePanchanga } = require('./panchanga');
+const { calculateHoroscope } = require('./horoscope');
+const Horoscope = require('./models/horoscope');
+
+const app    = express();
+const server = http.createServer(app);
+const io     = socketIo(server);
+
+// ─── Setup Swiss Ephemeris ───────────────────────────────────────────────
+swisseph.swe_set_ephe_path(path.join(__dirname, 'ephe'));
+
+// ─── MongoDB Logging (optional) ──────────────────────────────────────────
+mongoose.connect('mongodb://localhost:27017/realtime-chat', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(()=>console.log('✅ MongoDB connected'))
+  .catch(e=>console.error('❌ MongoDB error', e));
+
+const reqSchema = new mongoose.Schema({
+  user: String,
+  date: String,
+  time: String,
+  timezone: String,
+  place: String,
+  ayanamsa: Number,
+  requestedAt: Date
+});
+const HoroscopeRequest = mongoose.model('HoroscopeRequest', reqSchema);
+
+// ─── Helper Mappings ─────────────────────────────────────────────────────
+// Ayanāmsa modes
+const AYANAMSA_MODES = {
+  0: 'Fagan/Bradley',
+  1: 'Lahiri',
+  2: 'DeLu',
+  3: 'Raman',
+  4: 'Krishnamurti',
+  6: 'ED50',
+  7: 'Dehant'
+};
+
+// Weekday names
+const WEEKDAY_NAMES = {
+  Sunday:    'Ravivara',
+  Monday:    'Somavara',
+  Tuesday:   'Mangalavara',
+  Wednesday: 'Budhavara',
+  Thursday:  'Guruwara',
+  Friday:    'Shukravara',
+  Saturday:  'Shanivara'
+};
+
+// Zodiac signs (sidereal)
+const ZODIAC_SIGNS = [
+  'Mesha','Vrishabha','Mithuna','Karka',
+  'Simha','Kanya','Tula','Vrischika',
+  'Dhanus','Makara','Kumbha','Meena'
+];
+
+// Month names (amānta/pūrṇimānta)
+const MONTH_NAMES = [
+  'Chaitra','Vaishakha','Jyeshtha','Ashadha',
+  'Shravana','Bhadrapada','Ashwin','Kartika',
+  'Margashirsha','Paush','Magha','Phalguna'
+];
+
+// Tithi names (1–15)
+const TITHI_NAMES = [
+  'Pratipada','Dvitiya','Tritiya','Chaturthi','Panchami','Shashthi',
+  'Saptami','Ashtami','Navami','Dashami','Ekadashi','Dwadashi',
+  'Trayodashi','Chaturdashi','Purnima'
+];
+
+// Nakshatra names (1–27)
+const NAKSHATRA_NAMES = [
+  'Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra',
+  'Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni',
+  'Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha',
+  'Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha',
+  'Purva Bhadrapada','Uttara Bhadrapada','Revati'
+];
+
+// Yoga names (1–27)
+const YOGA_NAMES = [
+  'Vishkambha','Priti','Ayushman','Saubhagya','Shobhana','Atiganda','Sukarman',
+  'Dhriti','Shula','Ganda','Vriddhi','Dhruva','Vyaghata','Harshana','Vajra',
+  'Siddhi','Vyatipata','Variyana','Parigha','Shiva','Siddha','Sadhya','Shubha',
+  'Shukla','Brahma','Indra','Vaidhruti'
+];
+
+// Karana names (1–11)
+const KARANA_NAMES = [
+  'Kimstughna','Bava','Balava','Kaulava','Taitila','Garaja',
+  'Vanija','Vishti','Shakuni','Chatushpada','Nagava'
+];
+
+// ─── Main Socket Handler ─────────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, 'public')));
+
+io.on('connection', socket => {
+  console.log('Client connected:', socket.id);
+
+  socket.on('calculatePanchanga', async payload => {
+    const { user, date, time, timezone, place, ayanamsa } = payload;
+    const mode = parseInt(ayanamsa, 10);
+    const ayanamsaUsed = AYANAMSA_MODES[mode] || `Mode ${mode}`;
+
+    // Log request
+    await new HoroscopeRequest({
+      user, date, time, timezone, place, ayanamsa: mode, requestedAt: new Date()
+    }).save().catch(()=>{});
+
+    // Parse lat,lon
+    const [lat, lon] = place.split(',').map(s => parseFloat(s.trim()));
+
+    // Build local moment
+    const dt = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', timezone);
+    if (!dt.isValid()) {
+      return socket.emit('errorMessage', 'Invalid date/time or timezone');
+    }
+
+    // Get sunrise & sunset
+    const suncalcTimes = SunCalc.getTimes(dt.toDate(), lat, lon);
+    const sunrise = moment(suncalcTimes.sunrise).tz(timezone).format('hh:mm A');
+    const sunset  = moment(suncalcTimes.sunset).tz(timezone).format('hh:mm A');
+
+    try {
+      // Compute panchanga using the new module
+      const panchanga = computePanchanga(`${date} ${time}`, timezone, lat, lon, mode);
+      
+      // Add names to the panchanga elements
+      const tName = `${panchanga.tithi.number <= 15 ? 'Shukla ' : 'Krishna '}${TITHI_NAMES[(panchanga.tithi.number-1)%15]}`;
+      const nName = NAKSHATRA_NAMES[(panchanga.nakshatra.number-1)%27];
+      const yName = YOGA_NAMES[(panchanga.yoga.number-1)%27];
+      const k1Name = KARANA_NAMES[(panchanga.karana1.number-1)%11];
+      const k2Name = KARANA_NAMES[(panchanga.karana2.number-1)%11];
+
+      // Add leap names if they exist
+      let tithiLeap = null;
+      if (panchanga.tithiLeap) {
+        const t2Name = `${panchanga.tithiLeap.number <= 15 ? 'Shukla ' : 'Krishna '}${TITHI_NAMES[(panchanga.tithiLeap.number-1)%15]}`;
+        tithiLeap = {
+          number: panchanga.tithiLeap.number,
+          name: t2Name,
+          endTime: panchanga.tithiLeap.endTime
+        };
+      }
+
+      let nakshatraLeap = null;
+      if (panchanga.nakshatraLeap) {
+        nakshatraLeap = {
+          number: panchanga.nakshatraLeap.number,
+          name: NAKSHATRA_NAMES[(panchanga.nakshatraLeap.number-1)%27],
+          endTime: panchanga.nakshatraLeap.endTime
+        };
+      }
+
+      // — Derived values — 
+      const paksha = panchanga.tithi.number <= 15 ? 'Shukla Paksha' : 'Krishna Paksha';
+      const weekday = WEEKDAY_NAMES[dt.format('dddd')] || dt.format('dddd');
+      const sunSign = ZODIAC_SIGNS[Math.floor(panchanga.sunLongitude/30)];
+      const moonSign = ZODIAC_SIGNS[Math.floor(panchanga.moonLongitude/30)];
+      const amantaMonth = MONTH_NAMES[Math.floor(panchanga.sunLongitude/30)];
+      const purnimantaMonth = MONTH_NAMES[(Math.floor(panchanga.sunLongitude/30)+1)%12];
+
+      // — Emit everything — 
+      socket.emit('panchangaCalculated', {
+        user,
+        date,
+        time,
+        timezone,
+        place,
+        ayanamsaUsed,
+        sunrise,
+        sunset,
+        tithi: { 
+          number: panchanga.tithi.number, 
+          name: tName, 
+          endTime: panchanga.tithi.endTime 
+        },
+        tithiLeap,
+        nakshatra: { 
+          number: panchanga.nakshatra.number, 
+          name: nName, 
+          endTime: panchanga.nakshatra.endTime 
+        },
+        nakshatraLeap,
+        yoga: { 
+          number: panchanga.yoga.number, 
+          name: yName, 
+          endTime: panchanga.yoga.endTime 
+        },
+        karana1: { 
+          number: panchanga.karana1.number, 
+          name: k1Name, 
+          endTime: panchanga.karana1.endTime 
+        },
+        karana2: { 
+          number: panchanga.karana2.number, 
+          name: k2Name, 
+          endTime: panchanga.karana2.endTime 
+        },
+        paksha,
+        weekday,
+        amantaMonth,
+        purnimantaMonth,
+        moonSign,
+        sunSign
+      });
+    } catch (error) {
+      console.error('Panchanga calculation error:', error);
+      socket.emit('errorMessage', `Calculation error: ${error.message}`);
+    }
+  });
+
+  // ─── Horoscope Calculation ─────────────────────────────────────────────
+  socket.on('calculateHoroscope', async payload => {
+    const { 
+      name, dateOfBirth, timeOfBirth, placeOfBirth, 
+      latitude, longitude, timezone, ayanamsa 
+    } = payload;
+    
+    const mode = parseInt(ayanamsa, 10);
+    const ayanamsaUsed = AYANAMSA_MODES[mode] || `Mode ${mode}`;
+
+    try {
+      console.log('Received horoscope payload:', payload);
+      console.log('Latitude:', latitude, 'Type:', typeof latitude);
+      console.log('Longitude:', longitude, 'Type:', typeof longitude);
+
+      // Check if horoscope already exists
+      const existingHoroscope = await Horoscope.findByBirthDetails(name, dateOfBirth, timeOfBirth);
+      
+      if (existingHoroscope) {
+        // Return existing horoscope
+        socket.emit('horoscopeCalculated', {
+          ...existingHoroscope.toObject(),
+          ayanamsaUsed,
+          isCached: true
+        });
+        return;
+      }
+
+      // Calculate new horoscope
+      const horoscopeData = calculateHoroscope(
+        name, dateOfBirth, timeOfBirth, placeOfBirth,
+        latitude, longitude, timezone, mode
+      );
+
+      console.log('Calculated horoscope data:', {
+        latitude: horoscopeData.latitude,
+        longitude: horoscopeData.longitude
+      });
+
+      // Save to MongoDB
+      const horoscope = new Horoscope({
+        name: horoscopeData.name,
+        dateOfBirth: horoscopeData.dateOfBirth,
+        timeOfBirth: horoscopeData.timeOfBirth,
+        placeOfBirth: horoscopeData.placeOfBirth,
+        latitude: horoscopeData.latitude,
+        longitude: horoscopeData.longitude,
+        timezone: horoscopeData.timezone,
+        ayanamsaMode: mode,
+        lagna: horoscopeData.lagna,
+        planets: horoscopeData.planets,
+        houses: horoscopeData.houses,
+        chart: horoscopeData.chart,
+        calculatedAt: horoscopeData.calculatedAt
+      });
+      
+      await horoscope.save();
+
+      // Emit the calculated horoscope
+      socket.emit('horoscopeCalculated', {
+        ...horoscopeData,
+        ayanamsaUsed,
+        isCached: false
+      });
+
+    } catch (error) {
+      console.error('Horoscope calculation error:', error);
+      socket.emit('errorMessage', `Horoscope calculation error: ${error.message}`);
+    }
+  });
+
+  // ─── Get Saved Horoscopes ─────────────────────────────────────────────
+  socket.on('getSavedHoroscopes', async () => {
+    try {
+      const horoscopes = await Horoscope.find()
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('name dateOfBirth timeOfBirth placeOfBirth calculatedAt');
+      
+      socket.emit('savedHoroscopes', horoscopes);
+    } catch (error) {
+      console.error('Error fetching saved horoscopes:', error);
+      socket.emit('errorMessage', 'Error fetching saved horoscopes');
+    }
+  });
+
+  // ─── Get Specific Horoscope ───────────────────────────────────────────
+  socket.on('getHoroscope', async (horoscopeId) => {
+    try {
+      const horoscope = await Horoscope.findById(horoscopeId);
+      if (horoscope) {
+        socket.emit('horoscopeRetrieved', horoscope);
+      } else {
+        socket.emit('errorMessage', 'Horoscope not found');
+      }
+    } catch (error) {
+      console.error('Error fetching horoscope:', error);
+      socket.emit('errorMessage', 'Error fetching horoscope');
+    }
+  });
+});
+
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
