@@ -30,33 +30,46 @@ This guide will help you set up Google OAuth authentication for your Vedic Astro
 
 ## Step 3: Configure Environment Variables
 
-Create a `.env` file in your project root with the following variables:
+1. **Copy the example environment file:**
+   ```bash
+   cp env.example .env
+   ```
 
-```env
-# Google OAuth Configuration
-GOOGLE_CLIENT_ID=your-google-client-id-here
-GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+2. **Edit the `.env` file** and replace the placeholder values:
+   ```env
+   # Google OAuth Configuration
+   GOOGLE_CLIENT_ID=your-actual-google-client-id
+   GOOGLE_CLIENT_SECRET=your-actual-google-client-secret
 
-# Session and JWT Configuration
-SESSION_SECRET=your-session-secret-here
-JWT_SECRET=your-jwt-secret-here
+   # Session and JWT Configuration
+   SESSION_SECRET=your-random-session-secret
+   JWT_SECRET=your-random-jwt-secret
 
-# MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/realtime-chat
+   # MongoDB Configuration
+   MONGODB_URI=mongodb://localhost:27017/realtime-chat
 
-# Server Configuration
-PORT=3001
+   # Server Configuration
+   PORT=3001
 
-# TimeZoneDB API (for timezone lookup)
-TIMEZONEDB_API_KEY=your-timezonedb-api-key-here
-```
+   # TimeZoneDB API (for timezone lookup)
+   TIMEZONEDB_API_KEY=your-timezonedb-api-key
+   ```
+
+3. **Generate secure secrets** (optional but recommended):
+   ```bash
+   # Generate a random session secret
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   
+   # Generate a random JWT secret
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
 
 ## Step 4: Install Dependencies
 
 The required dependencies have already been installed:
 
 ```bash
-npm install passport passport-google-oauth20 express-session jsonwebtoken bcryptjs
+npm install passport passport-google-oauth20 express-session jsonwebtoken bcryptjs dotenv
 ```
 
 ## Step 5: Start the Application
@@ -93,6 +106,7 @@ npm install passport passport-google-oauth20 express-session jsonwebtoken bcrypt
 - Use HTTPS in production
 - Store sensitive environment variables securely
 - Regularly rotate your secrets
+- Never commit the `.env` file to version control
 
 ## Troubleshooting
 
@@ -114,6 +128,11 @@ npm install passport passport-google-oauth20 express-session jsonwebtoken bcrypt
    - The application is configured for same-origin requests
    - For cross-origin requests, additional CORS configuration may be needed
 
+5. **Environment variables not loading**
+   - Make sure you created the `.env` file (not `.env.example`)
+   - Verify the `.env` file is in the root directory
+   - Check that `dotenv` package is installed
+
 ## Production Deployment
 
 For production deployment:
@@ -130,4 +149,5 @@ If you encounter any issues, check:
 1. Browser console for JavaScript errors
 2. Server logs for backend errors
 3. Google Cloud Console for OAuth configuration
-4. MongoDB connection status 
+4. MongoDB connection status
+5. Environment variables are properly set 
