@@ -7,12 +7,13 @@ const http       = require('http');
 const socketIo   = require('socket.io');
 const moment     = require('moment-timezone');
 const mongoose   = require('mongoose');
-// const swisseph   = require('swisseph'); // Temporarily commented out
+const swisseph   = require('swisseph');
 const SunCalc    = require('suncalc');
 const path       = require('path');
 const session    = require('express-session');
 const passport   = require('passport');
 const jwt        = require('jsonwebtoken');
+const cors       = require('cors');
 
 const { computePanchanga } = require('./panchanga');
 const { calculateHoroscope } = require('./horoscope');
@@ -27,7 +28,7 @@ const server = http.createServer(app);
 const io     = socketIo(server);
 
 // ─── Setup Swiss Ephemeris ───────────────────────────────────────────────
-// swisseph.swe_set_ephe_path(path.join(__dirname, 'ephe')); // Temporarily commented out
+swisseph.swe_set_ephe_path(path.join(__dirname, 'ephe'));
 
 // ─── Session Configuration ───────────────────────────────────────────────
 app.use(session({
