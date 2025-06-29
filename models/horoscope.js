@@ -40,8 +40,8 @@ const horoscopeSchema = new mongoose.Schema({
   // Calculation parameters
   ayanamsaMode: {
     type: Number,
-    default: 1, // Lahiri
-    enum: [0, 1, 2, 3, 4, 6, 7]
+    default: 5, // Pushya Paksha
+    enum: [0, 1, 2, 3, 4, 5, 6, 7]
   },
   
   // Calculated chart data

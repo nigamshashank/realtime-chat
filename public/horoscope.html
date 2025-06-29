@@ -191,6 +191,17 @@
   
   <div class="container">
     <div class="form-section">
+      <h2>Saved Horoscopes</h2>
+      <div class="form-group">
+        <label for="savedHoroscopes">Select a saved horoscope:</label>
+        <select id="savedHoroscopes" style="margin-bottom: 10px;">
+          <option value="">-- Select a saved horoscope --</option>
+        </select>
+        <button type="button" id="loadSavedHoroscope" style="background: #007bff; margin-left: 10px; width: auto; padding: 8px 16px;">Load Selected Horoscope</button>
+        <button type="button" id="refreshSavedHoroscopes" style="background: #28a745; margin-left: 10px; width: auto; padding: 8px 16px;">Refresh List</button>
+        <button type="button" id="deleteSavedHoroscope" style="background: #dc3545; margin-left: 10px; width: auto; padding: 8px 16px;">Delete Selected Horoscope</button>
+      </div>
+      
       <h2>Birth Details</h2>
       <form id="horoscopeForm">
         <div class="form-group">
@@ -233,11 +244,12 @@
         <div class="form-group">
           <label for="ayanamsa">Ayanamsa:</label>
           <select id="ayanamsa">
-            <option value="1" selected>Lahiri</option>
+            <option value="1">Lahiri</option>
             <option value="0">Fagan/Bradley</option>
             <option value="2">DeLu</option>
             <option value="3">Raman</option>
             <option value="4">Krishnamurti</option>
+            <option value="5" selected>Pushya Paksha</option>
             <option value="6">ED50</option>
             <option value="7">Dehant</option>
           </select>
@@ -280,47 +292,212 @@
     // Pre-fill form with current date/time and timezone
     document.addEventListener('DOMContentLoaded', () => {
       const now = new Date();
-      document.getElementById('dateOfBirth').value = now.toISOString().slice(0, 10);
-      document.getElementById('timeOfBirth').value = now.toTimeString().slice(0, 5);
-      document.getElementById('timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const dateInput = document.getElementById('dateOfBirth');
+      const timeInput = document.getElementById('timeOfBirth');
+      const timezoneInput = document.getElementById('timezone');
+      if (dateInput) dateInput.value = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      if (timeInput) timeInput.value = now.toTimeString().slice(0, 5); // HH:MM
+      if (timezoneInput) timezoneInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      initializePlaceAutocomplete();
+      
+      // Load saved horoscopes
+      loadSavedHoroscopes();
     });
+
+    // Place of Birth Autocomplete
+    function initializePlaceAutocomplete() {
+      const placeOfBirthInput = document.getElementById('placeOfBirth');
+      const latitudeInput = document.getElementById('latitude');
+      const longitudeInput = document.getElementById('longitude');
+      const timezoneInput = document.getElementById('timezone');
+      if (!placeOfBirthInput) return;
+      // Create autocomplete container
+      let autocompleteContainer = document.getElementById('autocompleteContainer');
+      if (!autocompleteContainer) {
+        autocompleteContainer = document.createElement('div');
+        autocompleteContainer.id = 'autocompleteContainer';
+        autocompleteContainer.style.cssText = `
+          position: absolute;
+          background: white;
+          border: 1px solid #ddd;
+          border-top: none;
+          max-height: 200px;
+          overflow-y: auto;
+          width: 100%;
+          z-index: 1000;
+          display: none;`;
+        const placeGroup = placeOfBirthInput.parentElement;
+        placeGroup.style.position = 'relative';
+        placeGroup.appendChild(autocompleteContainer);
+      }
+      let searchTimeout;
+      placeOfBirthInput.addEventListener('input', function() {
+        const query = placeOfBirthInput.value.trim();
+        if (query.length < 2) {
+          autocompleteContainer.style.display = 'none';
+          return;
+        }
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => searchPlaces(query), 300);
+      });
+      placeOfBirthInput.addEventListener('focus', function() {
+        const query = placeOfBirthInput.value.trim();
+        if (query.length >= 2) searchPlaces(query);
+      });
+      placeOfBirthInput.addEventListener('blur', function() {
+        setTimeout(() => { autocompleteContainer.style.display = 'none'; }, 200);
+      });
+      document.addEventListener('click', function(e) {
+        if (!placeOfBirthInput.parentElement.contains(e.target)) {
+          autocompleteContainer.style.display = 'none';
+        }
+      });
+      async function searchPlaces(query) {
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+          const places = await response.json();
+          displayAutocompleteResults(places);
+        } catch (error) {
+          autocompleteContainer.innerHTML = `<div style='padding:10px;color:red;'>Error searching places</div>`;
+          autocompleteContainer.style.display = 'block';
+        }
+      }
+      function displayAutocompleteResults(places) {
+        autocompleteContainer.innerHTML = '';
+        if (!places.length) {
+          autocompleteContainer.style.display = 'none';
+          return;
+        }
+        places.forEach(place => {
+          const item = document.createElement('div');
+          item.style.cssText = `padding:10px;cursor:pointer;border-bottom:1px solid #eee;font-size:14px;`;
+          item.innerHTML = `<div style='font-weight:bold;'>${place.display_name.split(',')[0]}</div><div style='color:#666;font-size:12px;'>${place.display_name}</div>`;
+          item.addEventListener('click', () => selectPlace(place));
+          item.addEventListener('mouseenter', () => { item.style.backgroundColor = '#f0f0f0'; });
+          item.addEventListener('mouseleave', () => { item.style.backgroundColor = 'white'; });
+          autocompleteContainer.appendChild(item);
+        });
+        autocompleteContainer.style.display = 'block';
+      }
+      async function selectPlace(place) {
+        placeOfBirthInput.value = place.display_name;
+        const lat = parseFloat(place.lat);
+        const lon = parseFloat(place.lon);
+        latitudeInput.value = lat >= 0 ? `${lat.toFixed(4)}N` : `${Math.abs(lat).toFixed(4)}S`;
+        longitudeInput.value = lon >= 0 ? `${lon.toFixed(4)}E` : `${Math.abs(lon).toFixed(4)}W`;
+        try {
+          const tzRes = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=THT882HSAG63&format=json&by=position&lat=${lat}&lng=${lon}`);
+          const tzData = await tzRes.json();
+          if (tzData.status === 'OK') timezoneInput.value = tzData.zoneName;
+        } catch (error) {}
+        autocompleteContainer.style.display = 'none';
+      }
+    }
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       
+      // Clear any previous errors
+      error.style.display = 'none';
+      
+      // Debug: Log all form field values before reading
+      console.log('=== FORM SUBMISSION DEBUG ===');
+      console.log('Name field value:', document.getElementById('name')?.value);
+      console.log('Date field value:', document.getElementById('dateOfBirth')?.value);
+      console.log('Time field value:', document.getElementById('timeOfBirth')?.value);
+      console.log('Place field value:', document.getElementById('placeOfBirth')?.value);
+      console.log('Latitude field value:', document.getElementById('latitude')?.value);
+      console.log('Longitude field value:', document.getElementById('longitude')?.value);
+      console.log('Timezone field value:', document.getElementById('timezone')?.value);
+      console.log('Ayanamsa field value:', document.getElementById('ayanamsa')?.value);
+      
+      // Always read fresh values from form fields
+      const nameField = document.getElementById('name');
+      const dateField = document.getElementById('dateOfBirth');
+      const timeField = document.getElementById('timeOfBirth');
+      const placeField = document.getElementById('placeOfBirth');
+      const latField = document.getElementById('latitude');
+      const lonField = document.getElementById('longitude');
+      const tzField = document.getElementById('timezone');
+      const ayanamsaField = document.getElementById('ayanamsa');
+      
+      // Get all form data with fresh values
       const formData = {
-        name: document.getElementById('name').value,
-        dateOfBirth: document.getElementById('dateOfBirth').value,
-        timeOfBirth: document.getElementById('timeOfBirth').value,
-        placeOfBirth: document.getElementById('placeOfBirth').value,
-        latitude: document.getElementById('latitude').value,
-        longitude: document.getElementById('longitude').value,
-        timezone: document.getElementById('timezone').value,
-        ayanamsa: document.getElementById('ayanamsa').value
+        name: nameField ? nameField.value.trim() : '',
+        dateOfBirth: dateField ? dateField.value : '',
+        timeOfBirth: timeField ? timeField.value : '',
+        placeOfBirth: placeField ? placeField.value.trim() : '',
+        latitude: latField ? latField.value.trim() : '',
+        longitude: lonField ? lonField.value.trim() : '',
+        timezone: tzField ? tzField.value.trim() : '',
+        ayanamsa: ayanamsaField ? ayanamsaField.value : '5'
       };
+
+      // Debug: Log the form data being sent
+      console.log('Form data object:', formData);
+      console.log('Form data JSON:', JSON.stringify(formData, null, 2));
+
+      // Validate required fields
+      const requiredFields = ['name', 'dateOfBirth', 'timeOfBirth', 'placeOfBirth', 'latitude', 'longitude', 'timezone'];
+      for (const field of requiredFields) {
+        if (!formData[field]) {
+          error.textContent = `Please fill in all required fields. Missing: ${field}`;
+          error.style.display = 'block';
+          console.error('Validation failed for field:', field, 'Value:', formData[field]);
+          return;
+        }
+      }
 
       // Show loading
       loading.style.display = 'block';
-      error.style.display = 'none';
       chartContainer.style.display = 'none';
 
       // Send to server
+      console.log('Sending horoscope calculation request with data:', formData);
       socket.emit('calculateHoroscope', formData);
+      
+      // Debug: Check if form fields are modified after sending
+      setTimeout(() => {
+        console.log('=== FORM FIELDS AFTER SEND ===');
+        console.log('Name field value after send:', document.getElementById('name')?.value);
+        console.log('Date field value after send:', document.getElementById('dateOfBirth')?.value);
+        console.log('Time field value after send:', document.getElementById('timeOfBirth')?.value);
+        console.log('Place field value after send:', document.getElementById('placeOfBirth')?.value);
+        console.log('Latitude field value after send:', document.getElementById('latitude')?.value);
+        console.log('Longitude field value after send:', document.getElementById('longitude')?.value);
+        console.log('Timezone field value after send:', document.getElementById('timezone')?.value);
+        console.log('Ayanamsa field value after send:', document.getElementById('ayanamsa')?.value);
+      }, 100);
     });
 
     socket.on('horoscopeCalculated', (data) => {
+      console.log('=== HOROSCOPE CALCULATED RESPONSE ===');
+      console.log('Received data:', data);
       loading.style.display = 'none';
       displayHoroscope(data);
     });
 
     socket.on('errorMessage', (msg) => {
+      console.log('=== ERROR MESSAGE ===');
+      console.log('Error received:', msg);
       loading.style.display = 'none';
       error.textContent = msg;
       error.style.display = 'block';
     });
 
     function displayHoroscope(data) {
+      // Clear previous content first
       chartContainer.style.display = 'block';
+      northIndianChart.innerHTML = '';
+      planetList.innerHTML = '';
+      lagnaInfo.innerHTML = '';
+      
+      // Reset any global variables or state
+      if (window.toggleDashaChildren) {
+        delete window.toggleDashaChildren;
+      }
+      
+      console.log('Displaying horoscope with data:', data);
       
       // Display Lagna info
       lagnaInfo.innerHTML = `
@@ -361,18 +538,204 @@
       });
 
       // Display planet list, excluding Neptune, Uranus, Pluto
-      planetList.innerHTML = '<h3>Planetary Positions</h3>';
+      planetList.innerHTML = '<h3>Lagna & Planetary Details</h3>';
+      // Helper: Nakshatra names
+      const nakshatraNames = [
+        'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra',
+        'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni',
+        'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha',
+        'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha',
+        'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
+      ];
+      function getNakshatra(longitude) {
+        const idx = Math.floor((longitude % 360) / (360 / 27));
+        return nakshatraNames[idx];
+      }
+      function getPada(longitude) {
+        const nakLen = 360 / 27;
+        const posInNak = longitude % nakLen;
+        return Math.floor((posInNak / nakLen) * 4) + 1;
+      }
+      // Build table rows
+      let tableRows = '';
+      // Lagna
+      tableRows += `<tr><td>Lagna</td><td>${data.lagna.sign}</td><td>${data.lagna.degree.toFixed(2)}</td><td>${getNakshatra(data.lagna.longitude)}</td><td>${getPada(data.lagna.longitude)}</td></tr>`;
+      // Planets
       for (const [planet, info] of Object.entries(data.planets)) {
         if (["Neptune", "Uranus", "Pluto"].includes(planet)) continue;
         const retrograde = info.isRetrograde ? ' (R)' : '';
-        const planetDiv = document.createElement('div');
-        planetDiv.className = 'planet-item';
-        planetDiv.innerHTML = `
-          <span><strong>${planet}${retrograde}</strong></span>
-          <span>${info.sign} ${info.degree.toFixed(2)}°</span>
-        `;
-        planetList.appendChild(planetDiv);
+        tableRows += `<tr><td>${planet}${retrograde}</td><td>${info.sign}</td><td>${info.degree.toFixed(2)}</td><td>${getNakshatra(info.longitude)}</td><td>${getPada(info.longitude)}</td></tr>`;
       }
+      // Create table
+      planetList.innerHTML = `
+        <h3>Lagna & Planetary Details</h3>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+          <thead>
+            <tr style="background:#f0f0f0;">
+              <th>Body</th><th>Rashi</th><th>Degrees</th><th>Nakshatra</th><th>Pada</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      `;
+
+      // Display Vimshottari Dasha Tree
+      console.log('Dasha data received:', data.dashaTree);
+      console.log('Dasha data type:', typeof data.dashaTree);
+      console.log('Dasha data length:', data.dashaTree ? data.dashaTree.length : 'undefined');
+      
+      if (data.dashaTree && data.dashaTree.length > 0) {
+        console.log('Building dasha tree with', data.dashaTree.length, 'mahadashas');
+        const dashaContainer = document.createElement('div');
+        dashaContainer.innerHTML = `
+          <h3>Vimshottari Dasha</h3>
+          <div id="dashaTree" style="margin-top: 10px;"></div>
+        `;
+        planetList.appendChild(dashaContainer);
+        
+        // Build expandable dasha tree
+        function buildDashaTree(dashaNodes, level = 0) {
+          let html = '';
+          dashaNodes.forEach((node, index) => {
+            const indent = '&nbsp;'.repeat(level * 4);
+            const hasChildren = node.children && node.children.length > 0;
+            const expandIcon = hasChildren ? '▶' : '';
+            
+            // Convert dates to readable format
+            const startDate = new Date(node.start).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+            const endDate = new Date(node.end).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+            
+            html += `
+              <div style="margin: 5px 0; padding: 5px; border-left: 2px solid #ddd;">
+                <div style="cursor: pointer; font-weight: ${level === 0 ? 'bold' : 'normal'};" 
+                     onclick="toggleDashaChildren(${level}, ${index})">
+                  ${indent}${expandIcon} ${node.lord} (${startDate} to ${endDate})
+                </div>
+                <div id="dasha-children-${level}-${index}" style="display: none; margin-left: 20px;">
+                  ${hasChildren ? buildDashaTree(node.children, level + 1) : ''}
+                </div>
+              </div>
+            `;
+          });
+          return html;
+        }
+        
+        document.getElementById('dashaTree').innerHTML = buildDashaTree(data.dashaTree);
+        
+        // Add toggle function to window
+        window.toggleDashaChildren = function(level, index) {
+          const childrenDiv = document.getElementById(`dasha-children-${level}-${index}`);
+          if (childrenDiv) {
+            childrenDiv.style.display = childrenDiv.style.display === 'none' ? 'block' : 'none';
+          }
+        };
+      } else {
+        console.log('No dasha data available');
+        // Add debug info if dasha tree is not available
+        const dashaContainer = document.createElement('div');
+        dashaContainer.innerHTML = `
+          <h3>Vimshottari Dasha</h3>
+          <p style="color: #666; font-style: italic;">Dasha data not available</p>
+        `;
+        planetList.appendChild(dashaContainer);
+      }
+    }
+
+    // Load saved horoscopes from server
+    function loadSavedHoroscopes() {
+      socket.emit('getSavedHoroscopes');
+    }
+
+    // Handle saved horoscopes response
+    socket.on('savedHoroscopes', (horoscopes) => {
+      const dropdown = document.getElementById('savedHoroscopes');
+      dropdown.innerHTML = '<option value="">-- Select a saved horoscope --</option>';
+      
+      horoscopes.forEach(horoscope => {
+        const option = document.createElement('option');
+        option.value = horoscope._id;
+        option.textContent = `${horoscope.name} - ${horoscope.dateOfBirth} ${horoscope.timeOfBirth} (${horoscope.placeOfBirth})`;
+        dropdown.appendChild(option);
+      });
+    });
+
+    // Handle load saved horoscope button
+    document.getElementById('loadSavedHoroscope').addEventListener('click', () => {
+      const selectedId = document.getElementById('savedHoroscopes').value;
+      if (selectedId) {
+        socket.emit('getHoroscope', selectedId);
+      } else {
+        alert('Please select a horoscope first.');
+      }
+    });
+
+    // Handle refresh saved horoscopes button
+    document.getElementById('refreshSavedHoroscopes').addEventListener('click', () => {
+      loadSavedHoroscopes();
+    });
+
+    // Handle delete saved horoscope button
+    document.getElementById('deleteSavedHoroscope').addEventListener('click', () => {
+      const selectedId = document.getElementById('savedHoroscopes').value;
+      if (!selectedId) {
+        alert('Please select a horoscope to delete.');
+        return;
+      }
+      
+      const selectedOption = document.getElementById('savedHoroscopes').selectedOptions[0];
+      const horoscopeName = selectedOption.textContent;
+      
+      if (confirm(`Are you sure you want to delete this horoscope?\n\n${horoscopeName}\n\nThis action cannot be undone.`)) {
+        socket.emit('deleteHoroscope', selectedId);
+      }
+    });
+
+    // Handle retrieved horoscope
+    socket.on('horoscopeRetrieved', (horoscope) => {
+      // Populate form fields
+      document.getElementById('name').value = horoscope.name || '';
+      document.getElementById('dateOfBirth').value = horoscope.dateOfBirth || '';
+      document.getElementById('timeOfBirth').value = horoscope.timeOfBirth || '';
+      document.getElementById('placeOfBirth').value = horoscope.placeOfBirth || '';
+      document.getElementById('latitude').value = horoscope.latitude || '';
+      document.getElementById('longitude').value = horoscope.longitude || '';
+      document.getElementById('timezone').value = horoscope.timezone || '';
+      document.getElementById('ayanamsa').value = horoscope.ayanamsaMode || '5';
+      
+      // Display the horoscope
+      displayHoroscope(horoscope);
+      
+      // Show success message
+      console.log('Loaded saved horoscope:', horoscope.name);
+    });
+
+    // Handle horoscope deletion confirmation
+    socket.on('horoscopeDeleted', (message) => {
+      alert(`Horoscope deleted successfully!\n\n${message}`);
+      // Refresh the list to show updated data
+      loadSavedHoroscopes();
+      // Clear the form if the deleted horoscope was loaded
+      clearForm();
+    });
+
+    // Handle deletion error
+    socket.on('deleteError', (error) => {
+      alert(`Error deleting horoscope: ${error}`);
+    });
+
+    // Function to clear form fields
+    function clearForm() {
+      document.getElementById('name').value = '';
+      document.getElementById('dateOfBirth').value = '';
+      document.getElementById('timeOfBirth').value = '';
+      document.getElementById('placeOfBirth').value = '';
+      document.getElementById('latitude').value = '';
+      document.getElementById('longitude').value = '';
+      document.getElementById('timezone').value = '';
+      document.getElementById('ayanamsa').value = '5';
+      
+      // Clear the chart display
+      chartContainer.style.display = 'none';
     }
   </script>
 </body>

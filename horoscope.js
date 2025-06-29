@@ -1,6 +1,7 @@
 const swisseph = require('swisseph');
 const moment = require('moment-timezone');
 const { normalize, getSiderealLongitude } = require('./panchanga');
+const { calculateVimshottariDashaTree } = require('./dasha');
 
 // Planetary constants
 const PLANETS = {
@@ -310,6 +311,10 @@ function calculateHoroscope(name, dateOfBirth, timeOfBirth, placeOfBirth, lat, l
     // Generate diamond chart
     const chart = buildChartLayout(lagna, planets, houses);
 
+    // Calculate Vimshottari Dasha
+    const moonLongitude = planets.Moon.longitude;
+    const dashaTree = calculateVimshottariDashaTree(birthMoment.format('YYYY-MM-DD HH:mm:ss'), moonLongitude, timezone, 5);
+
     return {
       name,
       dateOfBirth,
@@ -323,6 +328,7 @@ function calculateHoroscope(name, dateOfBirth, timeOfBirth, placeOfBirth, lat, l
       planets,
       houses,
       chart,
+      dashaTree,
       calculatedAt: new Date()
     };
 

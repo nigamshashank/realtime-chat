@@ -238,20 +238,7 @@ io.on('connection', socket => {
       console.log('Latitude:', latitude, 'Type:', typeof latitude);
       console.log('Longitude:', longitude, 'Type:', typeof longitude);
 
-      // Check if horoscope already exists
-      const existingHoroscope = await Horoscope.findByBirthDetails(name, dateOfBirth, timeOfBirth);
-      
-      if (existingHoroscope) {
-        // Return existing horoscope
-        socket.emit('horoscopeCalculated', {
-          ...existingHoroscope.toObject(),
-          ayanamsaUsed,
-          isCached: true
-        });
-        return;
-      }
-
-      // Calculate new horoscope
+      // Always calculate fresh horoscope (don't use cache since we need dashaTree)
       const horoscopeData = calculateHoroscope(
         name, dateOfBirth, timeOfBirth, placeOfBirth,
         latitude, longitude, timezone, mode
@@ -259,10 +246,12 @@ io.on('connection', socket => {
 
       console.log('Calculated horoscope data:', {
         latitude: horoscopeData.latitude,
-        longitude: horoscopeData.longitude
+        longitude: horoscopeData.longitude,
+        hasDashaTree: !!horoscopeData.dashaTree,
+        dashaTreeLength: horoscopeData.dashaTree ? horoscopeData.dashaTree.length : 0
       });
 
-      // Save to MongoDB
+      // Save to MongoDB (without dashaTree since it's not in the schema)
       const horoscope = new Horoscope({
         name: horoscopeData.name,
         dateOfBirth: horoscopeData.dateOfBirth,
@@ -281,7 +270,7 @@ io.on('connection', socket => {
       
       await horoscope.save();
 
-      // Emit the calculated horoscope
+      // Emit the calculated horoscope with dashaTree
       socket.emit('horoscopeCalculated', {
         ...horoscopeData,
         ayanamsaUsed,
@@ -321,6 +310,26 @@ io.on('connection', socket => {
     } catch (error) {
       console.error('Error fetching horoscope:', error);
       socket.emit('errorMessage', 'Error fetching horoscope');
+    }
+  });
+
+  // ─── Delete Horoscope ─────────────────────────────────────────────────
+  socket.on('deleteHoroscope', async (horoscopeId) => {
+    try {
+      const horoscope = await Horoscope.findById(horoscopeId);
+      if (!horoscope) {
+        socket.emit('deleteError', 'Horoscope not found');
+        return;
+      }
+
+      const horoscopeName = horoscope.name;
+      await Horoscope.findByIdAndDelete(horoscopeId);
+      
+      socket.emit('horoscopeDeleted', `Deleted horoscope for: ${horoscopeName}`);
+      console.log(`Horoscope deleted: ${horoscopeName} (ID: ${horoscopeId})`);
+    } catch (error) {
+      console.error('Error deleting horoscope:', error);
+      socket.emit('deleteError', error.message);
     }
   });
 });
