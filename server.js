@@ -7,7 +7,7 @@ const http       = require('http');
 const socketIo   = require('socket.io');
 const moment     = require('moment-timezone');
 const mongoose   = require('mongoose');
-const swisseph   = require('swisseph');
+// const swisseph   = require('swisseph'); // Temporarily commented out
 const SunCalc    = require('suncalc');
 const path       = require('path');
 const session    = require('express-session');
@@ -27,7 +27,7 @@ const server = http.createServer(app);
 const io     = socketIo(server);
 
 // ─── Setup Swiss Ephemeris ───────────────────────────────────────────────
-swisseph.swe_set_ephe_path(path.join(__dirname, 'ephe'));
+// swisseph.swe_set_ephe_path(path.join(__dirname, 'ephe')); // Temporarily commented out
 
 // ─── Session Configuration ───────────────────────────────────────────────
 app.use(session({
