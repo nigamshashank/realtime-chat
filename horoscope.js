@@ -1,4 +1,17 @@
-const swisseph = require('swisseph');
+// const swisseph = require('swisseph'); // Temporarily commented out
+
+// Mock swisseph for deployment testing
+const swisseph = {
+  swe_set_sid_mode: () => {},
+  swe_houses: () => ({ houses: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330] }),
+  swe_get_ayanamsa_ut: () => 0,
+  swe_calc_ut: () => ({ longitude: 0, latitude: 0 }),
+  SE_MEAN_NODE: 10,
+  SEFLG_SWIEPH: 0,
+  swe_julday: () => 2450000,
+  SE_GREG_CAL: 1
+};
+
 const moment = require('moment-timezone');
 const { normalize, getSiderealLongitude } = require('./panchanga');
 const { calculateVimshottariDashaTree } = require('./dasha');

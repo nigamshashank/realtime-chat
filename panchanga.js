@@ -1,5 +1,17 @@
 // panchanga.js
-const swisseph = require('swisseph');
+// const swisseph = require('swisseph'); // Temporarily commented out
+
+// Mock swisseph for deployment testing
+const swisseph = {
+  swe_calc_ut: () => ({ longitude: 0, latitude: 0 }),
+  swe_get_ayanamsa_ut: () => 0,
+  swe_set_sid_mode: () => {},
+  swe_julday: () => 2450000,
+  SE_GREG_CAL: 1,
+  SE_SUN: 0,
+  SE_MOON: 1
+};
+
 const moment = require('moment-timezone');
 
 /**
