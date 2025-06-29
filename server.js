@@ -288,8 +288,9 @@ io.on('connection', socket => {
     try {
       const horoscopes = await Horoscope.find()
         .sort({ createdAt: -1 })
-        .limit(10)
         .select('name dateOfBirth timeOfBirth placeOfBirth calculatedAt');
+      
+      console.log(`Fetched ${horoscopes.length} saved horoscopes from database`);
       
       socket.emit('savedHoroscopes', horoscopes);
     } catch (error) {
@@ -316,17 +317,28 @@ io.on('connection', socket => {
   // ─── Delete Horoscope ─────────────────────────────────────────────────
   socket.on('deleteHoroscope', async (horoscopeId) => {
     try {
+      console.log(`Attempting to delete horoscope with ID: ${horoscopeId}`);
+      
       const horoscope = await Horoscope.findById(horoscopeId);
       if (!horoscope) {
+        console.log(`Horoscope not found with ID: ${horoscopeId}`);
         socket.emit('deleteError', 'Horoscope not found');
         return;
       }
 
       const horoscopeName = horoscope.name;
-      await Horoscope.findByIdAndDelete(horoscopeId);
+      console.log(`Found horoscope to delete: ${horoscopeName}`);
       
-      socket.emit('horoscopeDeleted', `Deleted horoscope for: ${horoscopeName}`);
-      console.log(`Horoscope deleted: ${horoscopeName} (ID: ${horoscopeId})`);
+      const deleteResult = await Horoscope.findByIdAndDelete(horoscopeId);
+      console.log(`Delete result:`, deleteResult);
+      
+      if (deleteResult) {
+        socket.emit('horoscopeDeleted', `Deleted horoscope for: ${horoscopeName}`);
+        console.log(`Horoscope deleted successfully: ${horoscopeName} (ID: ${horoscopeId})`);
+      } else {
+        socket.emit('deleteError', 'Failed to delete horoscope');
+        console.log(`Failed to delete horoscope with ID: ${horoscopeId}`);
+      }
     } catch (error) {
       console.error('Error deleting horoscope:', error);
       socket.emit('deleteError', error.message);
