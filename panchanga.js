@@ -3,8 +3,12 @@
 
 // Mock swisseph for deployment testing
 const swisseph = {
-  swe_calc_ut: () => ({ longitude: 0, latitude: 0 }),
-  swe_get_ayanamsa_ut: () => 0,
+  swe_calc_ut: () => ({ 
+    longitude: 120.5, 
+    latitude: 2.3, 
+    speedLong: 1.2 
+  }),
+  swe_get_ayanamsa_ut: () => 23.5,  // Return a proper ayanamsa value
   swe_set_sid_mode: () => {},
   swe_julday: () => 2450000,
   SE_GREG_CAL: 1,

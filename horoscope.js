@@ -3,9 +3,16 @@
 // Mock swisseph for deployment testing
 const swisseph = {
   swe_set_sid_mode: () => {},
-  swe_houses: () => ({ houses: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330] }),
-  swe_get_ayanamsa_ut: () => 0,
-  swe_calc_ut: () => ({ longitude: 0, latitude: 0 }),
+  swe_houses: () => ({ 
+    houses: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330],
+    ascendant: 45.5  // Return a proper ascendant value
+  }),
+  swe_get_ayanamsa_ut: () => 23.5,  // Return a proper ayanamsa value
+  swe_calc_ut: () => ({ 
+    longitude: 120.5, 
+    latitude: 2.3, 
+    speedLong: 1.2 
+  }),
   SE_MEAN_NODE: 10,
   SEFLG_SWIEPH: 0,
   swe_julday: () => 2450000,
@@ -101,6 +108,11 @@ function calculateLagna(jd, lat, lon, ayanamsaMode = 1) {
   const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
   const lagnaLongitude = normalize(houses.ascendant - ayanamsa);
   
+  // Safety check to prevent NaN values
+  if (isNaN(lagnaLongitude)) {
+    throw new Error('Invalid lagna calculation');
+  }
+  
   return {
     longitude: lagnaLongitude,
     sign: ZODIAC_SIGNS[Math.floor(lagnaLongitude / 30)],
@@ -125,8 +137,13 @@ function calculatePlanets(jd, ayanamsaMode = 1) {
     const result = swisseph.swe_calc_ut(jd, i, swisseph.SEFLG_SWIEPH);
     const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
     const longitude = normalize(result.longitude - ayanamsa);
-    const latitude = result.latitude;
-    const speed = result.speedLong;
+    const latitude = result.latitude || 0;
+    const speed = result.speedLong || 0;
+    
+    // Safety check to prevent NaN values
+    if (isNaN(longitude) || isNaN(latitude) || isNaN(speed)) {
+      throw new Error(`Invalid planetary calculation for planet ${i}`);
+    }
     
     planets[PLANET_NAMES[i]] = {
       longitude: longitude,
@@ -143,34 +160,39 @@ function calculatePlanets(jd, ayanamsaMode = 1) {
   
   // Calculate Rahu and Ketu (Lunar Nodes)
   const rahuResult = swisseph.swe_calc_ut(jd, swisseph.SE_MEAN_NODE, swisseph.SEFLG_SWIEPH);
-  const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
+  const rahuAyanamsa = swisseph.swe_get_ayanamsa_ut(jd);
   
   // Rahu is the ascending node of Moon
-  const rahuLongitude = normalize(rahuResult.longitude - ayanamsa);
+  const rahuLongitude = normalize(rahuResult.longitude - rahuAyanamsa);
   const ketuLongitude = normalize(rahuLongitude + 180);
+  
+  // Safety check for Rahu/Ketu
+  if (isNaN(rahuLongitude) || isNaN(ketuLongitude)) {
+    throw new Error('Invalid Rahu/Ketu calculation');
+  }
   
   planets['Rahu'] = {
     longitude: rahuLongitude,
     latitude: 0,
-    speed: rahuResult.speedLong,
+    speed: rahuResult.speedLong || 0,
     sign: ZODIAC_SIGNS[Math.floor(rahuLongitude / 30)],
     signNumber: Math.floor(rahuLongitude / 30) + 1,
     degree: rahuLongitude % 30,
     minute: Math.floor((rahuLongitude % 30) * 60),
     second: Math.floor(((rahuLongitude % 30) * 60 % 1) * 60),
-    isRetrograde: rahuResult.speedLong < 0
+    isRetrograde: (rahuResult.speedLong || 0) < 0
   };
   
   planets['Ketu'] = {
     longitude: ketuLongitude,
     latitude: 0,
-    speed: rahuResult.speedLong,
+    speed: rahuResult.speedLong || 0,
     sign: ZODIAC_SIGNS[Math.floor(ketuLongitude / 30)],
     signNumber: Math.floor(ketuLongitude / 30) + 1,
     degree: ketuLongitude % 30,
     minute: Math.floor((ketuLongitude % 30) * 60),
     second: Math.floor(((ketuLongitude % 30) * 60 % 1) * 60),
-    isRetrograde: rahuResult.speedLong < 0
+    isRetrograde: (rahuResult.speedLong || 0) < 0
   };
   
   return planets;
@@ -180,10 +202,21 @@ function calculatePlanets(jd, ayanamsaMode = 1) {
  * Calculate house positions based on lagna
  */
 function calculateHouses(lagnaLongitude) {
+  // Safety check for lagna longitude
+  if (isNaN(lagnaLongitude)) {
+    throw new Error('Invalid lagna longitude for house calculation');
+  }
+  
   const houses = [];
   
   for (let i = 1; i <= 12; i++) {
     const houseLongitude = normalize(lagnaLongitude + (i - 1) * 30);
+    
+    // Safety check for house longitude
+    if (isNaN(houseLongitude)) {
+      throw new Error(`Invalid house ${i} calculation`);
+    }
+    
     houses.push({
       number: i,
       name: HOUSE_NAMES[i - 1],
