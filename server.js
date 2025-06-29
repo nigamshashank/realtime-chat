@@ -7,10 +7,17 @@ const mongoose   = require('mongoose');
 const swisseph   = require('swisseph');
 const SunCalc    = require('suncalc');
 const path       = require('path');
+const session    = require('express-session');
+const passport   = require('passport');
+const jwt        = require('jsonwebtoken');
 
 const { computePanchanga } = require('./panchanga');
 const { calculateHoroscope } = require('./horoscope');
 const Horoscope = require('./models/horoscope');
+const User = require('./models/user');
+
+// Import passport configuration
+require('./config/passport');
 
 const app    = express();
 const server = http.createServer(app);
@@ -18,6 +25,22 @@ const io     = socketIo(server);
 
 // ─── Setup Swiss Ephemeris ───────────────────────────────────────────────
 swisseph.swe_set_ephe_path(path.join(__dirname, 'ephe'));
+
+// ─── Session Configuration ───────────────────────────────────────────────
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true in production with HTTPS
+}));
+
+// ─── Passport Configuration ─────────────────────────────────────────────
+app.use(passport.initialize());
+app.use(passport.session());
+
+// ─── Body Parser ────────────────────────────────────────────────────────
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ─── MongoDB Logging (optional) ──────────────────────────────────────────
 mongoose.connect('mongodb://localhost:27017/realtime-chat', {
@@ -103,6 +126,64 @@ const KARANA_NAMES = [
   'Kimstughna','Bava','Balava','Kaulava','Taitila','Garaja',
   'Vanija','Vishti','Shakuni','Chatushpada','Nagava'
 ];
+
+// ─── Authentication Routes ───────────────────────────────────────────────
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: req.user._id, email: req.user.email, displayName: req.user.displayName },
+      process.env.JWT_SECRET || 'your-jwt-secret',
+      { expiresIn: '7d' }
+    );
+    
+    // Redirect to frontend with token
+    res.redirect(`/?token=${token}`);
+  }
+);
+
+app.get('/auth/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    res.json({ message: 'Logged out successfully' });
+  });
+});
+
+app.get('/auth/status', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({
+      authenticated: true,
+      user: {
+        id: req.user._id,
+        displayName: req.user.displayName,
+        email: req.user.email,
+        picture: req.user.picture
+      }
+    });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+// ─── Protected API Routes ────────────────────────────────────────────────
+app.get('/api/user/profile', (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  res.json({
+    id: req.user._id,
+    displayName: req.user.displayName,
+    email: req.user.email,
+    picture: req.user.picture,
+    createdAt: req.user.createdAt,
+    lastLogin: req.user.lastLogin
+  });
+});
 
 // ─── Main Socket Handler ─────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));

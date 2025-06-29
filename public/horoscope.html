@@ -12,6 +12,108 @@
       background: #f5f5f5;
     }
     
+    /* Authentication Header */
+    .auth-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .user-details h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+    
+    .user-details p {
+      margin: 0;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Navigation */
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .nav-link {
+      color: #667eea;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+    
+    .nav-link:hover {
+      background: #f0f0f0;
+    }
+    
+    .nav-link.active {
+      background: #667eea;
+      color: white;
+    }
+    
+    /* Login prompt */
+    .login-prompt {
+      text-align: center;
+      padding: 3rem;
+      background: white;
+      border-radius: 10px;
+      margin: 2rem 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .login-btn {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 25px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 1rem;
+    }
+    
     .container {
       display: flex;
       gap: 20px;
@@ -187,93 +289,122 @@
   </style>
 </head>
 <body>
-  <h1>Vedic Horoscope Calculator</h1>
-  
-  <div class="container">
-    <div class="form-section">
-      <h2>Saved Horoscopes</h2>
-      <div class="form-group">
-        <label for="savedHoroscopes">Select a saved horoscope:</label>
-        <select id="savedHoroscopes" style="margin-bottom: 10px;">
-          <option value="">-- Select a saved horoscope --</option>
-        </select>
-        <button type="button" id="loadSavedHoroscope" style="background: #007bff; margin-left: 10px; width: auto; padding: 8px 16px;">Load Selected Horoscope</button>
-        <button type="button" id="refreshSavedHoroscopes" style="background: #28a745; margin-left: 10px; width: auto; padding: 8px 16px;">Refresh List</button>
-        <button type="button" id="deleteSavedHoroscope" style="background: #dc3545; margin-left: 10px; width: auto; padding: 8px 16px;">Delete Selected Horoscope</button>
+  <!-- Authentication Header -->
+  <div class="auth-header" id="authHeader" style="display: none;">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <h3 id="userName">User</h3>
+        <p id="userEmail">user@example.com</p>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Login Prompt -->
+  <div class="login-prompt" id="loginPrompt">
+    <h2>🔮 Welcome to Kunadli</h2>
+    <p>Vedic Astrology & Panchanga Calculator</p>
+    <p>Please login to access the horoscope calculator</p>
+    <a href="/login.html" class="login-btn">Login with Google</a>
+  </div>
+
+  <!-- Main Content (only shown when authenticated) -->
+  <div id="mainContent" style="display: none;">
+    <!-- Navigation -->
+    <div class="nav-links">
+      <a href="/" class="nav-link">Panchanga Calculator</a>
+      <a href="/horoscope.html" class="nav-link active">Horoscope Calculator</a>
+    </div>
+
+    <h1>Vedic Horoscope Calculator</h1>
+    
+    <div class="container">
+      <div class="form-section">
+        <h2>Saved Horoscopes</h2>
+        <div class="form-group">
+          <label for="savedHoroscopes">Select a saved horoscope:</label>
+          <select id="savedHoroscopes" style="margin-bottom: 10px;">
+            <option value="">-- Select a saved horoscope --</option>
+          </select>
+          <button type="button" id="loadSavedHoroscope" style="background: #007bff; margin-left: 10px; width: auto; padding: 8px 16px;">Load Selected Horoscope</button>
+          <button type="button" id="refreshSavedHoroscopes" style="background: #28a745; margin-left: 10px; width: auto; padding: 8px 16px;">Refresh List</button>
+          <button type="button" id="deleteSavedHoroscope" style="background: #dc3545; margin-left: 10px; width: auto; padding: 8px 16px;">Delete Selected Horoscope</button>
+        </div>
+        
+        <h2>Birth Details</h2>
+        <form id="horoscopeForm">
+          <div class="form-group">
+            <label for="name">Full Name:</label>
+            <input type="text" id="name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="dateOfBirth">Date of Birth:</label>
+            <input type="date" id="dateOfBirth" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="timeOfBirth">Time of Birth:</label>
+            <input type="time" id="timeOfBirth" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="placeOfBirth">Place of Birth:</label>
+            <input type="text" id="placeOfBirth" placeholder="e.g., Mumbai, India" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="latitude">Latitude:</label>
+            <input type="text" id="latitude" placeholder="e.g., 19.0760N or -19.0760" required>
+            <small style="color: #666;">Format: 19.0760N (North) or -19.0760 (South)</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="longitude">Longitude:</label>
+            <input type="text" id="longitude" placeholder="e.g., 72.8777E or -72.8777" required>
+            <small style="color: #666;">Format: 72.8777E (East) or -72.8777 (West)</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="timezone">Timezone:</label>
+            <input type="text" id="timezone" placeholder="e.g., Asia/Kolkata" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="ayanamsa">Ayanamsa:</label>
+            <select id="ayanamsa">
+              <option value="1">Lahiri</option>
+              <option value="0">Fagan/Bradley</option>
+              <option value="2">DeLu</option>
+              <option value="3">Raman</option>
+              <option value="4">Krishnamurti</option>
+              <option value="5" selected>Pushya Paksha</option>
+              <option value="6">ED50</option>
+              <option value="7">Dehant</option>
+            </select>
+          </div>
+          
+          <button type="submit">Calculate Horoscope</button>
+        </form>
       </div>
       
-      <h2>Birth Details</h2>
-      <form id="horoscopeForm">
-        <div class="form-group">
-          <label for="name">Full Name:</label>
-          <input type="text" id="name" required>
-        </div>
+      <div class="chart-section">
+        <h2>Birth Chart (Kundali)</h2>
+        <div id="loading" class="loading" style="display: none;">Calculating horoscope...</div>
+        <div id="error" class="error" style="display: none;"></div>
         
-        <div class="form-group">
-          <label for="dateOfBirth">Date of Birth:</label>
-          <input type="date" id="dateOfBirth" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="timeOfBirth">Time of Birth:</label>
-          <input type="time" id="timeOfBirth" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="placeOfBirth">Place of Birth:</label>
-          <input type="text" id="placeOfBirth" placeholder="e.g., Mumbai, India" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="latitude">Latitude:</label>
-          <input type="text" id="latitude" placeholder="e.g., 19.0760N or -19.0760" required>
-          <small style="color: #666;">Format: 19.0760N (North) or -19.0760 (South)</small>
-        </div>
-        
-        <div class="form-group">
-          <label for="longitude">Longitude:</label>
-          <input type="text" id="longitude" placeholder="e.g., 72.8777E or -72.8777" required>
-          <small style="color: #666;">Format: 72.8777E (East) or -72.8777 (West)</small>
-        </div>
-        
-        <div class="form-group">
-          <label for="timezone">Timezone:</label>
-          <input type="text" id="timezone" placeholder="e.g., Asia/Kolkata" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="ayanamsa">Ayanamsa:</label>
-          <select id="ayanamsa">
-            <option value="1">Lahiri</option>
-            <option value="0">Fagan/Bradley</option>
-            <option value="2">DeLu</option>
-            <option value="3">Raman</option>
-            <option value="4">Krishnamurti</option>
-            <option value="5" selected>Pushya Paksha</option>
-            <option value="6">ED50</option>
-            <option value="7">Dehant</option>
-          </select>
-        </div>
-        
-        <button type="submit">Calculate Horoscope</button>
-      </form>
-    </div>
-    
-    <div class="chart-section">
-      <h2>Birth Chart (Kundali)</h2>
-      <div id="loading" class="loading" style="display: none;">Calculating horoscope...</div>
-      <div id="error" class="error" style="display: none;"></div>
-      
-      <div id="chartContainer" style="display: none;">
-        <div class="north-indian-chart-container">
-          <div class="north-indian-chart" id="northIndianChart">
-            <!-- Houses will be dynamically generated here -->
+        <div id="chartContainer" style="display: none;">
+          <div class="north-indian-chart-container">
+            <div class="north-indian-chart" id="northIndianChart">
+              <!-- Houses will be dynamically generated here -->
+            </div>
           </div>
+          
+          <div class="planet-list" id="planetList"></div>
+          
+          <div id="lagnaInfo"></div>
         </div>
-        
-        <div class="planet-list" id="planetList"></div>
-        
-        <div id="lagnaInfo"></div>
       </div>
     </div>
   </div>
@@ -288,6 +419,63 @@
     const northIndianChart = document.getElementById('northIndianChart');
     const planetList = document.getElementById('planetList');
     const lagnaInfo = document.getElementById('lagnaInfo');
+
+    // Authentication functions
+    function checkAuth() {
+      fetch('/auth/status')
+        .then(response => response.json())
+        .then(data => {
+          if (data.authenticated) {
+            showAuthenticatedUser(data.user);
+          } else {
+            showLoginPrompt();
+          }
+        })
+        .catch(error => {
+          console.error('Auth check failed:', error);
+          showLoginPrompt();
+        });
+    }
+
+    function showAuthenticatedUser(user) {
+      document.getElementById('loginPrompt').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('authHeader').style.display = 'flex';
+      
+      document.getElementById('userName').textContent = user.displayName;
+      document.getElementById('userEmail').textContent = user.email;
+      
+      if (user.picture) {
+        document.getElementById('userAvatar').innerHTML = `<img src="${user.picture}" style="width: 100%; height: 100%; border-radius: 50%;" />`;
+      } else {
+        document.getElementById('userAvatar').textContent = user.displayName.charAt(0).toUpperCase();
+      }
+    }
+
+    function showLoginPrompt() {
+      document.getElementById('loginPrompt').style.display = 'block';
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('authHeader').style.display = 'none';
+    }
+
+    function logout() {
+      fetch('/auth/logout')
+        .then(response => response.json())
+        .then(data => {
+          localStorage.removeItem('authToken');
+          showLoginPrompt();
+        })
+        .catch(error => {
+          console.error('Logout failed:', error);
+          localStorage.removeItem('authToken');
+          showLoginPrompt();
+        });
+    }
+
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+    });
 
     // Pre-fill form with current date/time and timezone
     document.addEventListener('DOMContentLoaded', () => {
