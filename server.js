@@ -1,6 +1,12 @@
 // Load environment variables from .env file
 require('dotenv').config();
 
+// Temporary debug log to check environment variables
+console.log('Environment variables check:');
+console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
+console.log('MONGODB_URI length:', process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0);
+console.log('Available env vars:', Object.keys(process.env).filter(key => key.includes('MONGODB') || key.includes('DB')));
+
 // server.js
 const express    = require('express');
 const http       = require('http');
@@ -47,7 +53,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── MongoDB Logging (optional) ──────────────────────────────────────────
-mongoose.connect('mongodb://localhost:27017/realtime-chat', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/realtime-chat', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(()=>console.log('✅ MongoDB connected'))
