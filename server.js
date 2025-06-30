@@ -1,6 +1,11 @@
 // Load environment variables from .env file
 require('dotenv').config();
 
+// Debug: Print all possible MongoDB environment variables
+console.log('MONGODB_URI:', process.env.MONGODB_URI);
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
+console.log('MONGO_URL:', process.env.MONGO_URL);
+
 // Temporary debug log to check environment variables
 console.log('Environment variables check:');
 console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
@@ -60,7 +65,7 @@ const mongoUri = process.env.MONGODB_URI ||
                  process.env.MONGO_URL ||
                  'mongodb://localhost:27017/realtime-chat';
 
-console.log('Using MongoDB URI:', mongoUri ? mongoUri.substring(0, 20) + '...' : 'Not found');
+console.log('Using MongoDB URI:', mongoUri);
 
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
