@@ -86,8 +86,9 @@ function findTransit(baseJD, thresholdDeg, planetFunc) {
 /**
  * Get sidereal longitude of a planet at given JD
  */
-function getSiderealLongitude(jd, planetId) {
+function getSiderealLongitude(jd, planetId, ayanamsaMode = 1) {
   const result = swisseph.swe_calc_ut(jd, planetId, swisseph.SEFLG_SWIEPH);
+  swisseph.swe_set_sid_mode(ayanamsaMode, 0, 0);
   const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
   return normalize(result.longitude - ayanamsa);
 }
@@ -96,7 +97,7 @@ function getSiderealLongitude(jd, planetId) {
  * Compute comprehensive panchanga for a given date/time and location
  */
 function computePanchanga(dt, timezone, lat, lon, ayanamsaMode = 1) {
-  // Set ayanamsa mode
+  // Set sidereal mode
   swisseph.swe_set_sid_mode(ayanamsaMode, 0, 0);
   
   // Build local moment
@@ -109,14 +110,14 @@ function computePanchanga(dt, timezone, lat, lon, ayanamsaMode = 1) {
   const dtLocalMid = dtLocal.clone().startOf('day');
   const dtMidUTC = dtLocalMid.clone().utc();
   const baseJD = swisseph.swe_julday(
-    dtMidUTC.year(),
-    dtMidUTC.month() + 1,
-    dtMidUTC.date(),
-    dtMidUTC.hour() + dtMidUTC.minute()/60 + dtMidUTC.second()/3600,
+    dtLocalMid.year(),
+    dtLocalMid.month() + 1,
+    dtLocalMid.date(),
+    dtLocalMid.hour() + dtLocalMid.minute()/60 + dtLocalMid.second()/3600,
     swisseph.SE_GREG_CAL
   );
 
-  // Base sidereal longitudes at sunrise
+  // Get Sun and Moon positions at midnight
   const sun0 = getSiderealLongitude(baseJD, swisseph.SE_SUN);
   const moon0 = getSiderealLongitude(baseJD, swisseph.SE_MOON);
 

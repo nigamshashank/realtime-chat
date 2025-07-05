@@ -109,8 +109,8 @@ function calculateAntardashas(mahadashaLord, mahadashaStart, mahadashaEnd, maxLe
     
     const antardasha = {
       lord: DASA_LORDS[lordIdx],
-      start: periodStart.clone().toISOString(),
-      end: periodEnd.clone().toISOString(),
+      start: periodStart.clone(),
+      end: periodEnd.clone(),
       type: 'Antardasha',
       duration: antardashaYears,
       children: []
@@ -153,8 +153,8 @@ function calculatePratyantardashas(antardashaLord, antardashaStart, antardashaEn
     
     const pratyantardasha = {
       lord: DASA_LORDS[lordIdx],
-      start: periodStart.clone().toISOString(),
-      end: periodEnd.clone().toISOString(),
+      start: periodStart.clone(),
+      end: periodEnd.clone(),
       type: 'Pratyantardasha',
       duration: pratyantarYears,
       children: []
@@ -197,8 +197,8 @@ function calculateSookshmadashas(pratyantardashaLord, pratyantardashaStart, prat
     
     const sookshmadasha = {
       lord: DASA_LORDS[lordIdx],
-      start: periodStart.clone().toISOString(),
-      end: periodEnd.clone().toISOString(),
+      start: periodStart.clone(),
+      end: periodEnd.clone(),
       type: 'Sookshmadasha',
       duration: sookshmaYears,
       children: []
@@ -241,8 +241,8 @@ function calculatePranadashas(sookshmadashaLord, sookshmadashaStart, sookshmadas
     
     const pranadasha = {
       lord: DASA_LORDS[lordIdx],
-      start: periodStart.clone().toISOString(),
-      end: periodEnd.clone().toISOString(),
+      start: periodStart.clone(),
+      end: periodEnd.clone(),
       type: 'Pranadasha',
       duration: pranaYears,
       children: []
@@ -260,22 +260,20 @@ function calculatePranadashas(sookshmadashaLord, sookshmadashaStart, sookshmadas
  * Calculate Vimshottari Dasha Tree - CORRECTED VERSION
  */
 function calculateVimshottariDashaTree(birthDate, timezone, ayanamsaMode = 1, maxLevel = 5) {
-  // Parse birth date and convert to Julian Day in UTC (like horoscope.js)
+  // Parse birth date and convert to Julian Day
   const birthMoment = moment.tz(birthDate, timezone);
-  const birthMomentUTC = birthMoment.clone().utc();
   const birthJD = swisseph.swe_julday(
-    birthMomentUTC.year(),
-    birthMomentUTC.month() + 1,
-    birthMomentUTC.date(),
-    birthMomentUTC.hour() + birthMomentUTC.minute()/60 + birthMomentUTC.second()/3600,
+    birthMoment.year(),
+    birthMoment.month() + 1,
+    birthMoment.date(),
+    birthMoment.hour() + birthMoment.minute()/60 + birthMoment.second()/3600,
     swisseph.SE_GREG_CAL
   );
   
   console.log('=== CORRECTED Dasha Debug ===');
   console.log('Birth Date:', birthDate);
-  console.log('Local Time:', birthMoment.format('YYYY-MM-DD HH:mm:ss'));
-  console.log('UTC Time:', birthMomentUTC.format('YYYY-MM-DD HH:mm:ss'));
-  console.log('Birth JD (UTC):', birthJD);
+  console.log('Birth Moment:', birthMoment.format('YYYY-MM-DD HH:mm:ss'));
+  console.log('Birth JD:', birthJD);
   
   // Step 1: Calculate Ayanamsa
   let ayanamsa;
@@ -325,13 +323,19 @@ function calculateVimshottariDashaTree(birthDate, timezone, ayanamsaMode = 1, ma
   let lordIdx = dashaLordIdx;
   
   for (let i = 0; i < 9; i++) {
-    const periodYears = DASA_YEARS[lordIdx];
+    let periodYears = DASA_YEARS[lordIdx];
+    
+    // For the first dasha (running at birth), use the balance
+    if (i === 0) {
+      periodYears = actualDashaYears;
+    }
+    
     const periodEnd = periodStart.clone().add(periodYears, 'years');
     
     const mahadasha = {
       lord: DASA_LORDS[lordIdx],
-      start: periodStart.clone().toISOString(),
-      end: periodEnd.clone().toISOString(),
+      start: periodStart.clone(),
+      end: periodEnd.clone(),
       type: 'Mahadasha',
       duration: periodYears,
       children: []
@@ -359,7 +363,7 @@ function calculateVimshottariDashaTree(birthDate, timezone, ayanamsaMode = 1, ma
     nakshatraIndex: nakIdx,
     dashaLord: DASA_LORDS[dashaLordIdx],
     dashaBalance: dashaBalance,
-    dashaStart: dashaStart.toISOString(),
+    dashaStart: dashaStart,
     ayanamsa: ayanamsa,
     elapsedYears: elapsedYears,
     actualDashaYears: actualDashaYears,
