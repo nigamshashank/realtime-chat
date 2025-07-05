@@ -179,7 +179,6 @@
       <h2>Calculate Panchanga</h2>
       <div id="messages"></div>
 
-      <label>Your Name:<br/><input id="user" placeholder="Enter your name" /></label>
       <label>Date & Time:<br/>
         <input id="date" type="date" />
         <input id="time" type="time" />
@@ -209,7 +208,6 @@
   <script>
     const socket     = io();
     const messages   = document.getElementById('messages');
-    const userInput  = document.getElementById('user');
     const dateInput  = document.getElementById('date');
     const timeInput  = document.getElementById('time');
     const tzInput    = document.getElementById('tz');
@@ -313,7 +311,6 @@
 
     btn.addEventListener('click', () => {
       socket.emit('calculatePanchanga', {
-        user:     userInput.value,
         date:     dateInput.value,
         time:     timeInput.value,
         timezone: tzInput.value,
@@ -325,14 +322,14 @@
     socket.on('panchangaCalculated', data => {
       console.log('Payload:', data);
       const {
-        user, date, time, timezone, place, ayanamsaUsed,
+        date, time, timezone, place, ayanamsaUsed,
         sunrise, sunset, tithi, nakshatra, yoga, karana1, karana2,
         paksha, weekday, amantaMonth, purnimantaMonth, moonSign, sunSign
       } = data;
 
       appendMessage(`
         <div class="panchanga">
-          <strong>${user}</strong>'s Pañcāṅga for ${date} ${time} (${timezone}) @ ${place}:<br/>
+          <strong>Pañcāṅga for ${date} ${time} (${timezone}) @ ${place}:</strong><br/>
           • Ayanāmsa: ${ayanamsaUsed}<br/>
           • Sunrise: ${sunrise}<br/>
           • Sunset: ${sunset}<br/>

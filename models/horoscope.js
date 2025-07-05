@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 
 const horoscopeSchema = new mongoose.Schema({
+  // User reference
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  
   // User details
   name: {
     type: String,

@@ -50,6 +50,13 @@ const app    = express();
 const server = http.createServer(app);
 const io     = socketIo(server);
 
+// Socket authentication middleware
+io.use((socket, next) => {
+  // For now, we'll allow all connections
+  // In production, you might want to add JWT token validation here
+  next();
+});
+
 // ─── Setup Swiss Ephemeris ───────────────────────────────────────────────
 swisseph.swe_set_ephe_path(path.join(__dirname, 'ephe'));
 
@@ -239,13 +246,13 @@ io.on('connection', socket => {
   console.log('Client connected:', socket.id);
 
   socket.on('calculatePanchanga', async payload => {
-    const { user, date, time, timezone, place, ayanamsa } = payload;
+    const { date, time, timezone, place, ayanamsa } = payload;
     const mode = parseInt(ayanamsa, 10);
     const ayanamsaUsed = AYANAMSA_MODES[mode] || `Mode ${mode}`;
 
-    // Log request
+    // Log request (no user needed for Panchanga)
     await new HoroscopeRequest({
-      user, date, time, timezone, place, ayanamsa: mode, requestedAt: new Date()
+      user: 'anonymous', date, time, timezone, place, ayanamsa: mode, requestedAt: new Date()
     }).save().catch(()=>{});
 
     // Parse lat,lon
@@ -303,7 +310,6 @@ io.on('connection', socket => {
 
       // — Emit everything — 
       socket.emit('panchangaCalculated', {
-        user,
         date,
         time,
         timezone,
@@ -355,7 +361,7 @@ io.on('connection', socket => {
   socket.on('calculateHoroscope', async payload => {
     const { 
       name, dateOfBirth, timeOfBirth, placeOfBirth, 
-      latitude, longitude, timezone, ayanamsa 
+      latitude, longitude, timezone, ayanamsa, userId 
     } = payload;
     
     const mode = parseInt(ayanamsa, 10);
@@ -383,6 +389,7 @@ io.on('connection', socket => {
 
       // Save to MongoDB (without dashaTree since it's not in the schema)
       const horoscope = new Horoscope({
+        user: userId, // Add user reference
         name: horoscopeData.name,
         dateOfBirth: horoscopeData.dateOfBirth,
         timeOfBirth: horoscopeData.timeOfBirth,
@@ -414,13 +421,14 @@ io.on('connection', socket => {
   });
 
   // ─── Get Saved Horoscopes ─────────────────────────────────────────────
-  socket.on('getSavedHoroscopes', async () => {
+  socket.on('getSavedHoroscopes', async (userId) => {
     try {
-      const horoscopes = await Horoscope.find()
+      const query = userId ? { user: userId } : {};
+      const horoscopes = await Horoscope.find(query)
         .sort({ createdAt: -1 })
         .select('name dateOfBirth timeOfBirth placeOfBirth calculatedAt');
       
-      console.log(`Fetched ${horoscopes.length} saved horoscopes from database`);
+      console.log(`Fetched ${horoscopes.length} saved horoscopes from database for user: ${userId || 'all'}`);
       
       socket.emit('savedHoroscopes', horoscopes);
     } catch (error) {
@@ -445,14 +453,22 @@ io.on('connection', socket => {
   });
 
   // ─── Delete Horoscope ─────────────────────────────────────────────────
-  socket.on('deleteHoroscope', async (horoscopeId) => {
+  socket.on('deleteHoroscope', async (data) => {
     try {
-      console.log(`Attempting to delete horoscope with ID: ${horoscopeId}`);
+      const { horoscopeId, userId } = data;
+      console.log(`Attempting to delete horoscope with ID: ${horoscopeId} by user: ${userId}`);
       
       const horoscope = await Horoscope.findById(horoscopeId);
       if (!horoscope) {
         console.log(`Horoscope not found with ID: ${horoscopeId}`);
         socket.emit('deleteError', 'Horoscope not found');
+        return;
+      }
+
+      // Check if user owns this horoscope
+      if (horoscope.user.toString() !== userId) {
+        console.log(`User ${userId} not authorized to delete horoscope ${horoscopeId}`);
+        socket.emit('deleteError', 'You can only delete your own horoscopes');
         return;
       }
 
