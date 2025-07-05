@@ -76,29 +76,7 @@
       background: rgba(255, 255, 255, 0.3);
     }
     
-    /* Navigation */
-    .nav-tabs {
-      display: flex;
-      margin-bottom: 2rem;
-      border-bottom: 2px solid #eee;
-    }
-    
-    .nav-tab {
-      padding: 1rem 2rem;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.3s ease;
-    }
-    
-    .nav-tab.active {
-      border-bottom-color: #667eea;
-      color: #667eea;
-      font-weight: bold;
-    }
-    
-    .nav-tab:hover {
-      background: #f8f9fa;
-    }
+
     
     /* Admin navigation links */
     .nav-links {
@@ -122,14 +100,7 @@
       transform: translateY(-1px);
     }
     
-    /* Content sections */
-    .content-section {
-      display: none;
-    }
-    
-    .content-section.active {
-      display: block;
-    }
+
     
     /* Existing styles */
     #messages { border: 1px solid #ccc; height: 400px; overflow-y: auto; padding: .5em; }
@@ -190,17 +161,14 @@
 
   <!-- Main Content (only shown when authenticated) -->
   <div id="mainContent" style="display: none;">
-    <!-- Navigation Tabs -->
-    <div class="nav-tabs">
-      <div class="nav-tab active" onclick="showTab('panchanga')">Panchanga Calculator</div>
-      <a class="nav-tab" href="/horoscope.html" style="text-decoration: none; color: inherit;">Horoscope Calculator</a>
+    <!-- Navigation Links -->
+    <div class="nav-links" style="margin-bottom: 1rem;">
+      <a href="/" class="nav-link active">Home</a>
+      <a href="/horoscope.html" class="nav-link">Horoscope</a>
     </div>
-    
-    <!-- Admin Navigation Links -->
-    <div class="nav-links" style="margin-bottom: 1rem;"></div>
 
     <!-- Panchanga Section -->
-    <div class="content-section active" id="panchangaSection">
+    <div class="content-section" id="panchangaSection">
       <h2>Calculate Panchanga</h2>
       <div id="messages"></div>
 
@@ -304,23 +272,7 @@
         });
     }
 
-    function showTab(tabName) {
-      // Hide all sections
-      document.querySelectorAll('.content-section').forEach(section => {
-        section.classList.remove('active');
-      });
-      
-      // Remove active class from all tabs
-      document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      
-      // Show selected section
-      document.getElementById(tabName + 'Section').classList.add('active');
-      
-      // Add active class to clicked tab
-      event.target.classList.add('active');
-    }
+
 
     function appendMessage(html) {
       const d = document.createElement('div');
