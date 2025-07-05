@@ -488,12 +488,18 @@
           navLinks.appendChild(adminLink);
         }
       }
+      
+      // Load saved horoscopes after authentication is complete
+      loadSavedHoroscopes();
     }
 
     function showLoginPrompt() {
       document.getElementById('loginPrompt').style.display = 'block';
       document.getElementById('mainContent').style.display = 'none';
       document.getElementById('authHeader').style.display = 'none';
+      
+      // Load saved horoscopes for unauthenticated users (will show empty list)
+      loadSavedHoroscopes();
     }
 
     function logout() {
@@ -525,9 +531,6 @@
       if (timeInput) timeInput.value = now.toTimeString().slice(0, 5); // HH:MM
       if (timezoneInput) timezoneInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
       initializePlaceAutocomplete();
-      
-      // Load saved horoscopes
-      loadSavedHoroscopes();
     });
 
     // Place of Birth Autocomplete
@@ -906,6 +909,11 @@
 
     // Load saved horoscopes from server
     function loadSavedHoroscopes() {
+      console.log('Loading saved horoscopes...');
+      console.log('Current user:', currentUser);
+      console.log('User ID:', currentUser ? currentUser.id : null);
+      console.log('User role:', currentUser ? currentUser.role : null);
+      
       socket.emit('getSavedHoroscopes', {
         userId: currentUser ? currentUser.id : null,
         userRole: currentUser ? currentUser.role : null
@@ -914,6 +922,9 @@
 
     // Handle saved horoscopes response
     socket.on('savedHoroscopes', (horoscopes) => {
+      console.log('Received saved horoscopes:', horoscopes);
+      console.log('Number of horoscopes:', horoscopes.length);
+      
       const dropdown = document.getElementById('savedHoroscopes');
       dropdown.innerHTML = '<option value="">-- Select a saved horoscope --</option>';
       
@@ -928,6 +939,8 @@
         option.textContent = `${horoscope.name} - ${horoscope.dateOfBirth} ${horoscope.timeOfBirth} (${horoscope.placeOfBirth})${ownerInfo}`;
         dropdown.appendChild(option);
       });
+      
+      console.log('Dropdown populated with', horoscopes.length, 'horoscopes');
     });
 
     // Handle load saved horoscope button
