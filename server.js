@@ -205,7 +205,8 @@ app.get('/auth/status', (req, res) => {
         id: req.user._id,
         displayName: req.user.displayName,
         email: req.user.email,
-        picture: req.user.picture
+        picture: req.user.picture,
+        role: req.user.role
       }
     });
   } else {
@@ -479,8 +480,8 @@ io.on('connection', socket => {
   // ─── Delete Horoscope ─────────────────────────────────────────────────
   socket.on('deleteHoroscope', async (data) => {
     try {
-      const { horoscopeId, userId } = data;
-      console.log(`Attempting to delete horoscope with ID: ${horoscopeId} by user: ${userId}`);
+      const { horoscopeId, userId, userRole } = data;
+      console.log(`Attempting to delete horoscope with ID: ${horoscopeId} by user: ${userId} (role: ${userRole})`);
       
       const horoscope = await Horoscope.findById(horoscopeId);
       if (!horoscope) {
@@ -489,9 +490,9 @@ io.on('connection', socket => {
         return;
       }
 
-      // Check if user owns this horoscope
-      if (horoscope.user.toString() !== userId) {
-        console.log(`User ${userId} not authorized to delete horoscope ${horoscopeId}`);
+      // Admin can delete any horoscope, regular users can only delete their own
+      if (userRole !== 'admin' && horoscope.user && horoscope.user.toString() !== userId) {
+        console.log(`User ${userId} (role: ${userRole}) not authorized to delete horoscope ${horoscopeId}`);
         socket.emit('deleteError', 'You can only delete your own horoscopes');
         return;
       }

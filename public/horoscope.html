@@ -957,7 +957,11 @@
       const horoscopeName = selectedOption.textContent;
       
       if (confirm(`Are you sure you want to delete this horoscope?\n\n${horoscopeName}\n\nThis action cannot be undone.`)) {
-        socket.emit('deleteHoroscope', { horoscopeId: selectedId, userId: currentUser ? currentUser.id : null });
+        socket.emit('deleteHoroscope', { 
+          horoscopeId: selectedId, 
+          userId: currentUser ? currentUser.id : null,
+          userRole: currentUser ? currentUser.role : null
+        });
       }
     });
 
