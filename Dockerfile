@@ -13,9 +13,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Set npm config for Python
-RUN npm config set python python3
-
 # Create app directory
 WORKDIR /app
 
