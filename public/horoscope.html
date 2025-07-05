@@ -687,8 +687,22 @@
       
       console.log('Displaying horoscope with data:', data);
       
-      // Display Lagna info
+      // Display Ayanamsa and Lagna info
       lagnaInfo.innerHTML = `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #007bff;">
+          <h3 style="margin-top: 0; color: #007bff;">Ayanamsa Information</h3>
+          <p><strong>Ayanamsa Used:</strong> ${data.ayanamsaUsed || 'Not specified'}</p>
+          <p><strong>Ayanamsa Value:</strong> ${data.dashaInfo ? data.dashaInfo.ayanamsa.toFixed(2) + '°' : 'N/A'}</p>
+          <p><strong>Moon Sidereal Longitude:</strong> ${data.dashaInfo ? data.dashaInfo.moonSiderealLongitude.toFixed(2) + '°' : 'N/A'}</p>
+          <p><strong>Nakshatra:</strong> ${data.dashaInfo ? data.dashaInfo.nakshatra : 'N/A'}</p>
+          <p><strong>Dasha Lord:</strong> ${data.dashaInfo ? data.dashaInfo.dashaLord : 'N/A'}</p>
+          <p><strong>Dasha Balance:</strong> ${data.dashaInfo ? (data.dashaInfo.dashaBalance * 100).toFixed(2) + '%' : 'N/A'}</p>
+          <p style="font-size: 0.9em; color: #666; margin-top: 10px; font-style: italic;">
+            <strong>Note:</strong> Ayanamsa is the difference between tropical and sidereal zodiac. 
+            Different ayanamsa systems (Lahiri, Pushya Paksha, etc.) can result in different nakshatra and dasha calculations.
+          </p>
+        </div>
+        
         <h3>Lagna (Ascendant)</h3>
         <p><strong>${data.lagna.sign}</strong> ${data.lagna.degree.toFixed(2)}°</p>
         <p>Longitude: ${data.lagna.longitude.toFixed(2)}°</p>
@@ -777,14 +791,28 @@
         const dashaContainer = document.createElement('div');
         dashaContainer.innerHTML = `
           <h3>Vimshottari Dasha</h3>
+          <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+            <h4 style="margin-top: 0; color: #856404;">Dasha Calculation Details</h4>
+            <p><strong>Birth Date:</strong> ${data.dateOfBirth} ${data.timeOfBirth}</p>
+            <p><strong>Place:</strong> ${data.placeOfBirth}</p>
+            <p><strong>Ayanamsa System:</strong> ${data.ayanamsaUsed || 'Not specified'}</p>
+            <p><strong>Ayanamsa Mode:</strong> ${data.ayanamsaMode || 'N/A'} (${data.ayanamsaUsed || 'Not specified'})</p>
+            <p><strong>Ayanamsa Value:</strong> ${data.dashaInfo ? data.dashaInfo.ayanamsa.toFixed(2) + '°' : 'N/A'}</p>
+            <p><strong>Moon Sidereal Longitude:</strong> ${data.dashaInfo ? data.dashaInfo.moonSiderealLongitude.toFixed(2) + '°' : 'N/A'}</p>
+            <p><strong>Nakshatra:</strong> ${data.dashaInfo ? data.dashaInfo.nakshatra : 'N/A'}</p>
+            <p><strong>Dasha Lord:</strong> ${data.dashaInfo ? data.dashaInfo.dashaLord : 'N/A'}</p>
+            <p><strong>Dasha Balance:</strong> ${data.dashaInfo ? (data.dashaInfo.dashaBalance * 100).toFixed(2) + '% remaining' : 'N/A'}</p>
+            <p><strong>Dasha Start Date:</strong> ${data.dashaInfo ? new Date(data.dashaInfo.dashaStart).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : 'N/A'}</p>
+          </div>
           <div id="dashaTree" style="margin-top: 10px;"></div>
         `;
         planetList.appendChild(dashaContainer);
         
         // Build expandable dasha tree
-        function buildDashaTree(dashaNodes, level = 0) {
+        function buildDashaTree(dashaNodes, level = 0, path = '') {
           let html = '';
           dashaNodes.forEach((node, index) => {
+            const currentPath = path ? `${path}-${index}` : `${index}`;
             const indent = '&nbsp;'.repeat(level * 4);
             const hasChildren = node.children && node.children.length > 0;
             const expandIcon = hasChildren ? '▶' : '';
@@ -793,14 +821,20 @@
             const startDate = new Date(node.start).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
             const endDate = new Date(node.end).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
             
+            // Format duration
+            const duration = node.duration ? ` (${node.duration.toFixed(2)} years)` : '';
+            
+            // Get type label
+            const typeLabel = node.type ? ` - ${node.type}` : '';
+            
             html += `
               <div style="margin: 5px 0; padding: 5px; border-left: 2px solid #ddd;">
                 <div style="cursor: pointer; font-weight: ${level === 0 ? 'bold' : 'normal'};" 
-                     onclick="toggleDashaChildren(${level}, ${index})">
-                  ${indent}${expandIcon} ${node.lord} (${startDate} to ${endDate})
+                     onclick="toggleDashaChildren('${currentPath}')">
+                  ${indent}${expandIcon} ${node.lord}${typeLabel} (${startDate} to ${endDate})${duration}
                 </div>
-                <div id="dasha-children-${level}-${index}" style="display: none; margin-left: 20px;">
-                  ${hasChildren ? buildDashaTree(node.children, level + 1) : ''}
+                <div id="dasha-children-${currentPath}" style="display: none; margin-left: 20px;">
+                  ${hasChildren ? buildDashaTree(node.children, level + 1, currentPath) : ''}
                 </div>
               </div>
             `;
@@ -811,8 +845,8 @@
         document.getElementById('dashaTree').innerHTML = buildDashaTree(data.dashaTree);
         
         // Add toggle function to window
-        window.toggleDashaChildren = function(level, index) {
-          const childrenDiv = document.getElementById(`dasha-children-${level}-${index}`);
+        window.toggleDashaChildren = function(path) {
+          const childrenDiv = document.getElementById(`dasha-children-${path}`);
           if (childrenDiv) {
             childrenDiv.style.display = childrenDiv.style.display === 'none' ? 'block' : 'none';
           }

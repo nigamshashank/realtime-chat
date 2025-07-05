@@ -346,7 +346,7 @@ io.on('connection', socket => {
       // Always calculate fresh horoscope (don't use cache since we need dashaTree)
       const horoscopeData = calculateHoroscope(
         name, dateOfBirth, timeOfBirth, placeOfBirth,
-        latitude, longitude, timezone, mode
+        latitude, longitude, timezone, mode, 5 // Always use max depth
       );
 
       console.log('Calculated horoscope data:', {

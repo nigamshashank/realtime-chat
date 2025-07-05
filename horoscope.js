@@ -269,7 +269,7 @@ function buildChartLayout(lagna, planets, houses) {
 /**
  * Main horoscope calculation function
  */
-function calculateHoroscope(name, dateOfBirth, timeOfBirth, placeOfBirth, lat, lon, timezone, ayanamsaMode = 1) {
+function calculateHoroscope(name, dateOfBirth, timeOfBirth, placeOfBirth, lat, lon, timezone, ayanamsaMode = 1, dashaLevel = 5) {
   try {
     // Parse birth date and time in local timezone
     const birthMoment = moment.tz(`${dateOfBirth} ${timeOfBirth}`, 'YYYY-MM-DD HH:mm', timezone);
@@ -313,9 +313,8 @@ function calculateHoroscope(name, dateOfBirth, timeOfBirth, placeOfBirth, lat, l
     // Generate diamond chart
     const chart = buildChartLayout(lagna, planets, houses);
 
-    // Calculate Vimshottari Dasha
-    const moonLongitude = planets.Moon.longitude;
-    const dashaTree = calculateVimshottariDashaTree(birthMoment.format('YYYY-MM-DD HH:mm:ss'), moonLongitude, timezone, 5);
+    // Calculate Vimshottari Dasha using Ayanamsa method
+    const dashaResult = calculateVimshottariDashaTree(birthMoment.format('YYYY-MM-DD HH:mm:ss'), timezone, ayanamsaMode, dashaLevel);
 
     return {
       name,
@@ -330,7 +329,15 @@ function calculateHoroscope(name, dateOfBirth, timeOfBirth, placeOfBirth, lat, l
       planets,
       houses,
       chart,
-      dashaTree,
+      dashaTree: dashaResult.tree,
+      dashaInfo: {
+        moonSiderealLongitude: dashaResult.moonSiderealLongitude,
+        nakshatra: dashaResult.nakshatra,
+        dashaLord: dashaResult.dashaLord,
+        dashaBalance: dashaResult.dashaBalance,
+        dashaStart: dashaResult.dashaStart,
+        ayanamsa: dashaResult.ayanamsa
+      },
       calculatedAt: new Date()
     };
 
