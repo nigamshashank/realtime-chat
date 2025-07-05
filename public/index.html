@@ -245,6 +245,18 @@
       } else {
         document.getElementById('userAvatar').textContent = user.displayName.charAt(0).toUpperCase();
       }
+      
+      // Add admin link if user is admin
+      if (user.role === 'admin') {
+        const navLinks = document.querySelector('.nav-links');
+        if (!document.querySelector('.nav-link[href="/admin.html"]')) {
+          const adminLink = document.createElement('a');
+          adminLink.href = '/admin.html';
+          adminLink.className = 'nav-link';
+          adminLink.textContent = 'Admin Dashboard';
+          navLinks.appendChild(adminLink);
+        }
+      }
     }
 
     function showLoginPrompt() {

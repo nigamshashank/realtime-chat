@@ -42,6 +42,7 @@ const { computePanchanga } = require('./panchanga');
 const { calculateHoroscope } = require('./horoscope');
 const Horoscope = require('./models/horoscope');
 const User = require('./models/user');
+const adminRoutes = require('./routes/admin');
 
 // Import passport configuration
 require('./config/passport');
@@ -233,10 +234,14 @@ app.get('/api/user/profile', (req, res) => {
     displayName: req.user.displayName,
     email: req.user.email,
     picture: req.user.picture,
+    role: req.user.role,
     createdAt: req.user.createdAt,
     lastLogin: req.user.lastLogin
   });
 });
+
+// ─── Admin Routes ────────────────────────────────────────────────────────
+app.use('/api/admin', adminRoutes);
 
 // ─── Main Socket Handler ─────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
@@ -421,14 +426,18 @@ io.on('connection', socket => {
   });
 
   // ─── Get Saved Horoscopes ─────────────────────────────────────────────
-  socket.on('getSavedHoroscopes', async (userId) => {
+  socket.on('getSavedHoroscopes', async (data) => {
     try {
-      const query = userId ? { user: userId } : {};
-      const horoscopes = await Horoscope.find(query)
-        .sort({ createdAt: -1 })
-        .select('name dateOfBirth timeOfBirth placeOfBirth calculatedAt');
+      const { userId, userRole } = data || {};
       
-      console.log(`Fetched ${horoscopes.length} saved horoscopes from database for user: ${userId || 'all'}`);
+      // Admin can see all horoscopes, regular users only see their own
+      const query = userRole === 'admin' ? {} : { user: userId };
+      const horoscopes = await Horoscope.find(query)
+        .populate('user', 'displayName email')
+        .sort({ createdAt: -1 })
+        .select('name dateOfBirth timeOfBirth placeOfBirth calculatedAt user');
+      
+      console.log(`Fetched ${horoscopes.length} saved horoscopes from database for user: ${userId} (role: ${userRole})`);
       
       socket.emit('savedHoroscopes', horoscopes);
     } catch (error) {
@@ -507,10 +516,9 @@ process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully...');
   server.close(() => {
     console.log('Server closed');
-    mongoose.connection.close(() => {
-      console.log('MongoDB connection closed');
-      process.exit(0);
-    });
+    mongoose.connection.close();
+    console.log('MongoDB connection closed');
+    process.exit(0);
   });
 });
 
@@ -518,9 +526,8 @@ process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   server.close(() => {
     console.log('Server closed');
-    mongoose.connection.close(() => {
-      console.log('MongoDB connection closed');
-      process.exit(0);
-    });
+    mongoose.connection.close();
+    console.log('MongoDB connection closed');
+    process.exit(0);
   });
 });

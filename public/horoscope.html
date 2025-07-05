@@ -476,6 +476,18 @@
       } else {
         document.getElementById('userAvatar').textContent = user.displayName.charAt(0).toUpperCase();
       }
+      
+      // Add admin link if user is admin
+      if (user.role === 'admin') {
+        const navLinks = document.querySelector('.nav-links');
+        if (!document.querySelector('.nav-link[href="/admin.html"]')) {
+          const adminLink = document.createElement('a');
+          adminLink.href = '/admin.html';
+          adminLink.className = 'nav-link';
+          adminLink.textContent = 'Admin Dashboard';
+          navLinks.appendChild(adminLink);
+        }
+      }
     }
 
     function showLoginPrompt() {
@@ -894,7 +906,10 @@
 
     // Load saved horoscopes from server
     function loadSavedHoroscopes() {
-      socket.emit('getSavedHoroscopes', currentUser ? currentUser.id : null);
+      socket.emit('getSavedHoroscopes', {
+        userId: currentUser ? currentUser.id : null,
+        userRole: currentUser ? currentUser.role : null
+      });
     }
 
     // Handle saved horoscopes response
@@ -905,7 +920,12 @@
       horoscopes.forEach(horoscope => {
         const option = document.createElement('option');
         option.value = horoscope._id;
-        option.textContent = `${horoscope.name} - ${horoscope.dateOfBirth} ${horoscope.timeOfBirth} (${horoscope.placeOfBirth})`;
+        
+        // Show owner for admin users
+        const ownerInfo = currentUser && currentUser.role === 'admin' && horoscope.user ? 
+          ` (by ${horoscope.user.displayName})` : '';
+        
+        option.textContent = `${horoscope.name} - ${horoscope.dateOfBirth} ${horoscope.timeOfBirth} (${horoscope.placeOfBirth})${ownerInfo}`;
         dropdown.appendChild(option);
       });
     });
