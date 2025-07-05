@@ -100,6 +100,11 @@
       transform: translateY(-1px);
     }
     
+    .nav-link.active {
+      background: #667eea;
+      color: white;
+    }
+    
 
     
     /* Existing styles */
@@ -129,6 +134,85 @@
       text-decoration: none;
       display: inline-block;
       margin-top: 1rem;
+    }
+    
+    /* Container layout */
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .form-section {
+      flex: 1;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .chart-section {
+      flex: 2;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1, h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+    
+    button:hover {
+      background: #45a049;
+    }
+    
+    /* Panchanga results styling */
+    .panchanga {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .panchanga strong {
+      color: #333;
+      font-size: 16px;
+    }
+    
+    .panchanga br {
+      margin-bottom: 5px;
     }
   </style>
   <link rel="icon" type="image/png" href="/image/favicon.png">
@@ -167,46 +251,66 @@
       <a href="/horoscope.html" class="nav-link">Horoscope</a>
     </div>
 
-    <!-- Panchanga Section -->
-    <div class="content-section" id="panchangaSection">
-      <h2>Calculate Panchanga</h2>
-      <div id="messages"></div>
-
-      <label>Date & Time:<br/>
-        <input id="date" type="date" />
-        <input id="time" type="time" />
-      </label>
-      <label>Timezone:<br/><input id="tz" placeholder="e.g. America/New_York" /></label>
-      <label>Place (lat,lon):<br/><input id="place" placeholder="Latitude,Longitude" /></label>
-
-      <label>Ayanāmsa:<br/>
-        <select id="ayanamsa">
-          <option value="0">Fagan/Bradley</option>
-          <option value="1" selected>Lahiri</option>
-          <option value="2">DeLu</option>
-          <option value="3">Raman</option>
-          <option value="4">Krishnamurti</option>
-          <option value="6">ED50</option>
-          <option value="7">Dehant</option>
-        </select>
-      </label>
-
-      <button id="sendPanchanga">Calculate Panchanga</button>
+    <h1>Panchanga Calculator</h1>
+    
+    <div class="container">
+      <div class="form-section">
+        <h2>Date & Location Details</h2>
+        <form id="panchangaForm">
+          <div class="form-group">
+            <label for="date">Date:</label>
+            <input type="date" id="date" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="time">Time:</label>
+            <input type="time" id="time" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="tz">Timezone:</label>
+            <input type="text" id="tz" placeholder="e.g. America/New_York" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="place">Place (Latitude, Longitude):</label>
+            <input type="text" id="place" placeholder="e.g. 28.6139,77.2090" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="ayanamsa">Ayanāmsa:</label>
+            <select id="ayanamsa">
+              <option value="0">Fagan/Bradley</option>
+              <option value="1" selected>Lahiri</option>
+              <option value="2">DeLu</option>
+              <option value="3">Raman</option>
+              <option value="4">Krishnamurti</option>
+              <option value="6">ED50</option>
+              <option value="7">Dehant</option>
+            </select>
+          </div>
+          
+          <button type="submit">Calculate Panchanga</button>
+        </form>
+      </div>
+      
+      <div class="chart-section">
+        <h2>Panchanga Results</h2>
+        <div id="messages"></div>
+      </div>
     </div>
-
-
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket     = io();
     const messages   = document.getElementById('messages');
+    const form       = document.getElementById('panchangaForm');
     const dateInput  = document.getElementById('date');
     const timeInput  = document.getElementById('time');
     const tzInput    = document.getElementById('tz');
     const placeInput = document.getElementById('place');
     const ayanInput  = document.getElementById('ayanamsa');
-    const btn        = document.getElementById('sendPanchanga');
 
     // Authentication functions
     function checkAuth() {
@@ -298,7 +402,8 @@
       }
     });
 
-    btn.addEventListener('click', () => {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
       socket.emit('calculatePanchanga', {
         date:     dateInput.value,
         time:     timeInput.value,
