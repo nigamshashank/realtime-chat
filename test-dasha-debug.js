@@ -1,10 +1,11 @@
 const { calculateVimshottariDashaTree } = require('./dasha.js');
 
-// Test with the specific birth data
-const birthDate = '1978-12-19 14:30:00';
+const birthDate = '1979-06-16 15:35:00';
 const timezone = 'Asia/Kolkata';
 
 console.log('=== DEBUGGING DASHA TREE STRUCTURE ===');
+console.log('Birth Date:', birthDate);
+console.log('Timezone:', timezone);
 const dashaResult = calculateVimshottariDashaTree(birthDate, timezone, 1, 5);
 
 console.log('\n=== DASHA TREE STRUCTURE ===');
@@ -28,6 +29,16 @@ console.log(`First Mahadasha: ${dashaResult.tree[0].lord}`);
 console.log(`First Mahadasha Duration: ${dashaResult.tree[0].duration} years`);
 console.log(`First Mahadasha Start: ${dashaResult.tree[0].start}`);
 console.log(`First Mahadasha End: ${dashaResult.tree[0].end}`);
+
+// Check total duration
+let totalYears = 0;
+dashaResult.tree.forEach(mahadasha => {
+  totalYears += mahadasha.duration;
+});
+console.log(`Total Dasha Years: ${totalYears} years`);
+
+// Check if it's exactly 120 years
+console.log(`Is 120 years? ${totalYears === 120 ? 'YES' : 'NO'}`);
 
 // Test with Lahiri Ayanamsa (Mode 1)
 console.log('\n=== LAHIRI AYANAMSA (Mode 1) ===');

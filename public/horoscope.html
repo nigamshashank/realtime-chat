@@ -786,6 +786,15 @@
       console.log('Dasha data type:', typeof data.dashaTree);
       console.log('Dasha data length:', data.dashaTree ? data.dashaTree.length : 'undefined');
       
+      // Debug: Log each mahadasha
+      if (data.dashaTree && data.dashaTree.length > 0) {
+        console.log('=== MAHADASHA DEBUG ===');
+        data.dashaTree.forEach((mahadasha, index) => {
+          console.log(`Mahadasha ${index + 1}: ${mahadasha.lord} - ${mahadasha.duration} years (${mahadasha.start} to ${mahadasha.end})`);
+        });
+        console.log('=== END DEBUG ===');
+      }
+      
       if (data.dashaTree && data.dashaTree.length > 0) {
         console.log('Building dasha tree with', data.dashaTree.length, 'mahadashas');
         const dashaContainer = document.createElement('div');
