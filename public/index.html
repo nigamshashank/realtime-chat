@@ -100,6 +100,28 @@
       background: #f8f9fa;
     }
     
+    /* Admin navigation links */
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .nav-link {
+      background: #667eea;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    
+    .nav-link:hover {
+      background: #5a6fd8;
+      transform: translateY(-1px);
+    }
+    
     /* Content sections */
     .content-section {
       display: none;
@@ -173,6 +195,9 @@
       <div class="nav-tab active" onclick="showTab('panchanga')">Panchanga Calculator</div>
       <a class="nav-tab" href="/horoscope.html" style="text-decoration: none; color: inherit;">Horoscope Calculator</a>
     </div>
+    
+    <!-- Admin Navigation Links -->
+    <div class="nav-links" style="margin-bottom: 1rem;"></div>
 
     <!-- Panchanga Section -->
     <div class="content-section active" id="panchangaSection">
@@ -249,7 +274,7 @@
       // Add admin link if user is admin
       if (user.role === 'admin') {
         const navLinks = document.querySelector('.nav-links');
-        if (!document.querySelector('.nav-link[href="/admin.html"]')) {
+        if (navLinks && !document.querySelector('.nav-link[href="/admin.html"]')) {
           const adminLink = document.createElement('a');
           adminLink.href = '/admin.html';
           adminLink.className = 'nav-link';
