@@ -211,6 +211,7 @@ app.get('/api/user/profile', (req, res) => {
 
 // ─── Main Socket Handler ─────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/image', express.static('image'));
 
 io.on('connection', socket => {
   console.log('Client connected:', socket.id);

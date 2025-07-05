@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <title>Vedic Horoscope Calculator</title>
+  <link rel="icon" type="image/png" href="/image/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -53,6 +55,20 @@
       opacity: 0.9;
     }
     
+    .header-images {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 0 1rem;
+    }
+    
+    .header-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
     .logout-btn {
       background: rgba(255, 255, 255, 0.2);
       color: white;
@@ -61,6 +77,9 @@
       border-radius: 20px;
       cursor: pointer;
       transition: all 0.3s ease;
+      width: 25%;
+      min-width: 80px;
+      max-width: 200px;
     }
     
     .logout-btn:hover {
@@ -297,6 +316,10 @@
         <h3 id="userName">User</h3>
         <p id="userEmail">user@example.com</p>
       </div>
+    </div>
+    <div class="header-images">
+      <img src="/image/favicon.png" alt="Favicon" class="header-image">
+      <img src="/image/saraswatiji.png" alt="Saraswati Ji" class="header-image">
     </div>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
