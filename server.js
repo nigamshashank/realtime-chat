@@ -1,6 +1,17 @@
 // Load environment variables from .env file
 require('dotenv').config();
 
+// Add process error handling
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 // Debug: Print all possible MongoDB environment variables
 console.log('MONGODB_URI:', process.env.MONGODB_URI);
 console.log('DATABASE_URL:', process.env.DATABASE_URL);
@@ -192,6 +203,17 @@ app.get('/auth/status', (req, res) => {
   } else {
     res.json({ authenticated: false });
   }
+});
+
+// ─── Health Check Endpoint ───────────────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    nodeVersion: process.version
+  });
 });
 
 // ─── Protected API Routes ────────────────────────────────────────────────
@@ -455,4 +477,34 @@ io.on('connection', socket => {
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+
+// Better server startup with error handling
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📊 Health check available at http://localhost:${PORT}/health`);
+  console.log(`🔧 Node.js version: ${process.version}`);
+  console.log(`💾 Memory usage:`, process.memoryUsage());
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    mongoose.connection.close(() => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    mongoose.connection.close(() => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
+});
