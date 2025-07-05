@@ -642,7 +642,7 @@
       planetList.innerHTML = '';
       lagnaInfo.innerHTML = '';
       
-      // Display Ayanamsa and Lagna info
+      // Display Ayanamsa and Chart info
       lagnaInfo.innerHTML = `
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #007bff;">
           <h3 style="margin-top: 0; color: #007bff;">Chart Information</h3>
@@ -651,10 +651,6 @@
           <p><strong>Timezone:</strong> ${data.timezone}</p>
           <p><strong>Ayanamsa:</strong> ${data.ayanamsaUsed || 'Not specified'}</p>
         </div>
-        
-        <h3>Lagna (Ascendant)</h3>
-        <p><strong>${data.lagna.sign}</strong> ${data.lagna.degree.toFixed(2)}°</p>
-        <p>Longitude: ${data.lagna.longitude.toFixed(2)}°</p>
       `;
 
       // North Indian house order: top center (Lagna), then anticlockwise
