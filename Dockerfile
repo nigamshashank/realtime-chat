@@ -1,4 +1,5 @@
 # Use Node.js 18 with Python and build tools
+# Fixed: Removed problematic npm config command
 FROM node:18-bullseye
 
 # Install system dependencies for building native modules
