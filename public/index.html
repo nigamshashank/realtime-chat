@@ -736,50 +736,60 @@
         <div class="panchanga-results">
           <div class="panchanga-card">
             <h3>📅 Tithi (Lunar Day)</h3>
-            <p><strong>Tithi:</strong> ${data.tithi || 'N/A'}</p>
-            <p><strong>Tithi Number:</strong> ${data.tithiNumber || 'N/A'}</p>
+            <p><strong>Tithi:</strong> ${data.tithi ? data.tithi.name : 'N/A'}</p>
+            <p><strong>Tithi Number:</strong> ${data.tithi ? data.tithi.number : 'N/A'}</p>
+            <p><strong>End Time:</strong> ${data.tithi ? data.tithi.endTime : 'N/A'}</p>
             <p><strong>Paksha:</strong> ${data.paksha || 'N/A'}</p>
+            ${data.tithiLeap ? `<p><strong>Leap Tithi:</strong> ${data.tithiLeap.name} (${data.tithiLeap.endTime})</p>` : ''}
           </div>
           
           <div class="panchanga-card">
             <h3>🌙 Nakshatra (Lunar Mansion)</h3>
-            <p><strong>Nakshatra:</strong> ${data.nakshatra || 'N/A'}</p>
-            <p><strong>Nakshatra Number:</strong> ${data.nakshatraNumber || 'N/A'}</p>
-            <p><strong>Pada:</strong> ${data.pada || 'N/A'}</p>
+            <p><strong>Nakshatra:</strong> ${data.nakshatra ? data.nakshatra.name : 'N/A'}</p>
+            <p><strong>Nakshatra Number:</strong> ${data.nakshatra ? data.nakshatra.number : 'N/A'}</p>
+            <p><strong>End Time:</strong> ${data.nakshatra ? data.nakshatra.endTime : 'N/A'}</p>
+            ${data.nakshatraLeap ? `<p><strong>Leap Nakshatra:</strong> ${data.nakshatraLeap.name} (${data.nakshatraLeap.endTime})</p>` : ''}
           </div>
           
           <div class="panchanga-card">
             <h3>⭐ Yoga (Sun-Moon Combination)</h3>
-            <p><strong>Yoga:</strong> ${data.yoga || 'N/A'}</p>
-            <p><strong>Yoga Number:</strong> ${data.yogaNumber || 'N/A'}</p>
+            <p><strong>Yoga:</strong> ${data.yoga ? data.yoga.name : 'N/A'}</p>
+            <p><strong>Yoga Number:</strong> ${data.yoga ? data.yoga.number : 'N/A'}</p>
+            <p><strong>End Time:</strong> ${data.yoga ? data.yoga.endTime : 'N/A'}</p>
           </div>
           
           <div class="panchanga-card">
             <h3>🌅 Karana (Half Tithi)</h3>
-            <p><strong>Karana:</strong> ${data.karana || 'N/A'}</p>
-            <p><strong>Karana Number:</strong> ${data.karanaNumber || 'N/A'}</p>
+            <p><strong>Karana 1:</strong> ${data.karana1 ? data.karana1.name : 'N/A'}</p>
+            <p><strong>Karana 1 Number:</strong> ${data.karana1 ? data.karana1.number : 'N/A'}</p>
+            <p><strong>Karana 1 End:</strong> ${data.karana1 ? data.karana1.endTime : 'N/A'}</p>
+            <p><strong>Karana 2:</strong> ${data.karana2 ? data.karana2.name : 'N/A'}</p>
+            <p><strong>Karana 2 Number:</strong> ${data.karana2 ? data.karana2.number : 'N/A'}</p>
+            <p><strong>Karana 2 End:</strong> ${data.karana2 ? data.karana2.endTime : 'N/A'}</p>
           </div>
           
           <div class="panchanga-card">
             <h3>🌞 Vara (Weekday)</h3>
-            <p><strong>Vara:</strong> ${data.vara || 'N/A'}</p>
-            <p><strong>Weekday:</strong> ${data.weekday || 'N/A'}</p>
+            <p><strong>Vara:</strong> ${data.weekday || 'N/A'}</p>
+            <p><strong>Sun Sign:</strong> ${data.sunSign || 'N/A'}</p>
+            <p><strong>Moon Sign:</strong> ${data.moonSign || 'N/A'}</p>
           </div>
           
           <div class="panchanga-card">
             <h3>🌍 Mas (Month)</h3>
-            <p><strong>Mas:</strong> ${data.mas || 'N/A'}</p>
-            <p><strong>Season:</strong> ${data.season || 'N/A'}</p>
+            <p><strong>Amanta Month:</strong> ${data.amantaMonth || 'N/A'}</p>
+            <p><strong>Purnimanta Month:</strong> ${data.purnimantaMonth || 'N/A'}</p>
+            <p><strong>Sunrise:</strong> ${data.sunrise || 'N/A'}</p>
+            <p><strong>Sunset:</strong> ${data.sunset || 'N/A'}</p>
           </div>
         </div>
         
         <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2196f3;">
           <h3 style="margin-top: 0; color: #1976d2;">Additional Information</h3>
-          <p><strong>Julian Day:</strong> ${data.julianDay || 'N/A'}</p>
-          <p><strong>Local Time:</strong> ${data.localTime || 'N/A'}</p>
-          <p><strong>UTC Time:</strong> ${data.utcTime || 'N/A'}</p>
-          <p><strong>Latitude:</strong> ${data.latitude || 'N/A'}°</p>
-          <p><strong>Longitude:</strong> ${data.longitude || 'N/A'}°</p>
+          <p><strong>Date & Time:</strong> ${data.date} ${data.time}</p>
+          <p><strong>Place:</strong> ${data.place}</p>
+          <p><strong>Timezone:</strong> ${data.timezone}</p>
+          <p><strong>Ayanamsa:</strong> ${data.ayanamsaUsed || 'Not specified'}</p>
         </div>
       `;
       

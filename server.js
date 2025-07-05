@@ -279,6 +279,11 @@ io.on('connection', socket => {
       // Compute panchanga using the new module
       const panchanga = computePanchanga(`${date} ${time}`, timezone, lat, lon, mode);
       
+      // Also calculate chart data for the same time
+      const chartData = calculateHoroscope(
+        'Current Time', date, time, place, lat, lon, timezone, mode, 1 // Use minimal dasha level for panchanga
+      );
+      
       // Add names to the panchanga elements
       const tName = `${panchanga.tithi.number <= 15 ? 'Shukla ' : 'Krishna '}${TITHI_NAMES[(panchanga.tithi.number-1)%15]}`;
       const nName = NAKSHATRA_NAMES[(panchanga.nakshatra.number-1)%27];
@@ -314,8 +319,14 @@ io.on('connection', socket => {
       const amantaMonth = MONTH_NAMES[Math.floor(panchanga.sunLongitude/30)];
       const purnimantaMonth = MONTH_NAMES[(Math.floor(panchanga.sunLongitude/30)+1)%12];
 
-      // — Emit everything — 
+      // — Emit everything including chart data — 
       socket.emit('panchangaCalculated', {
+        // Chart data
+        lagna: chartData.lagna,
+        planets: chartData.planets,
+        houses: chartData.houses,
+        
+        // Panchanga data
         date,
         time,
         timezone,
