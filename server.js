@@ -392,25 +392,40 @@ io.on('connection', socket => {
       
 
 
-      // Save to MongoDB (without dashaTree since it's not in the schema)
-      const horoscope = new Horoscope({
-        user: userId, // Add user reference
-        name: horoscopeData.name,
-        dateOfBirth: horoscopeData.dateOfBirth,
-        timeOfBirth: horoscopeData.timeOfBirth,
-        placeOfBirth: horoscopeData.placeOfBirth,
-        latitude: horoscopeData.latitude,
-        longitude: horoscopeData.longitude,
-        timezone: horoscopeData.timezone,
-        ayanamsaMode: mode,
-        lagna: horoscopeData.lagna,
-        planets: horoscopeData.planets,
-        houses: horoscopeData.houses,
-        chart: horoscopeData.chart,
-        calculatedAt: horoscopeData.calculatedAt
-      });
-      
-      await horoscope.save();
+      // Only save to MongoDB if user is authenticated
+      if (userId) {
+        const horoscopeDataToSave = {
+          user: userId, // Add user reference
+          name: horoscopeData.name,
+          dateOfBirth: horoscopeData.dateOfBirth,
+          timeOfBirth: horoscopeData.timeOfBirth,
+          placeOfBirth: horoscopeData.placeOfBirth,
+          latitude: horoscopeData.latitude,
+          longitude: horoscopeData.longitude,
+          timezone: horoscopeData.timezone,
+          ayanamsaMode: mode,
+          lagna: horoscopeData.lagna,
+          planets: horoscopeData.planets,
+          houses: horoscopeData.houses,
+          chart: horoscopeData.chart,
+          calculatedAt: horoscopeData.calculatedAt
+        };
+        
+        // Use findOneAndUpdate with upsert to update existing or create new
+        const horoscope = await Horoscope.findOneAndUpdate(
+          { name: horoscopeData.name },
+          horoscopeDataToSave,
+          { 
+            new: true, // Return the updated document
+            upsert: true, // Create if doesn't exist
+            setDefaultsOnInsert: true // Set default values on insert
+          }
+        );
+        
+        console.log(`Horoscope ${horoscopeData.name} saved/updated for user ${userId}`);
+      } else {
+        console.log('No userId provided, skipping database save');
+      }
 
       // Emit the calculated horoscope with dashaTree
       socket.emit('horoscopeCalculated', {

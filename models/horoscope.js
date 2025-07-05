@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 
 const horoscopeSchema = new mongoose.Schema({
-  // User reference
+  // User reference (optional for unauthenticated users)
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
   
   // User details
@@ -129,7 +128,8 @@ const horoscopeSchema = new mongoose.Schema({
   timestamps: true // Adds createdAt and updatedAt fields
 });
 
-// Index for efficient queries
+// Index for efficient queries - name should be unique globally
+horoscopeSchema.index({ name: 1 }, { unique: true });
 horoscopeSchema.index({ name: 1, dateOfBirth: 1 });
 horoscopeSchema.index({ calculatedAt: -1 });
 
@@ -156,6 +156,13 @@ horoscopeSchema.statics.findByBirthDetails = function(name, dateOfBirth, timeOfB
     name: name,
     dateOfBirth: dateOfBirth,
     timeOfBirth: timeOfBirth
+  });
+};
+
+// Static method to find by name (for upsert operations)
+horoscopeSchema.statics.findByName = function(name) {
+  return this.findOne({
+    name: name
   });
 };
 
