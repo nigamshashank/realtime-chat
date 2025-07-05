@@ -356,14 +356,7 @@ io.on('connection', socket => {
         dashaTreeLength: horoscopeData.dashaTree ? horoscopeData.dashaTree.length : 0
       });
       
-      // Debug: Log dasha tree details
-      if (horoscopeData.dashaTree && horoscopeData.dashaTree.length > 0) {
-        console.log('=== SERVER DASHA TREE DEBUG ===');
-        horoscopeData.dashaTree.forEach((mahadasha, index) => {
-          console.log(`Server Mahadasha ${index + 1}: ${mahadasha.lord} - ${mahadasha.duration} years`);
-        });
-        console.log('=== END SERVER DEBUG ===');
-      }
+
 
       // Save to MongoDB (without dashaTree since it's not in the schema)
       const horoscope = new Horoscope({
