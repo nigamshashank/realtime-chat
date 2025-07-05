@@ -488,7 +488,6 @@
           navLinks.appendChild(adminLink);
         }
       }
-      
       // Load saved horoscopes after authentication is complete
       loadSavedHoroscopes();
     }
@@ -497,7 +496,6 @@
       document.getElementById('loginPrompt').style.display = 'block';
       document.getElementById('mainContent').style.display = 'none';
       document.getElementById('authHeader').style.display = 'none';
-      
       // Load saved horoscopes for unauthenticated users (will show empty list)
       loadSavedHoroscopes();
     }
@@ -531,6 +529,7 @@
       if (timeInput) timeInput.value = now.toTimeString().slice(0, 5); // HH:MM
       if (timezoneInput) timezoneInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
       initializePlaceAutocomplete();
+      // DO NOT call loadSavedHoroscopes here!
     });
 
     // Place of Birth Autocomplete
