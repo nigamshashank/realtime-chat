@@ -214,6 +214,159 @@
     .panchanga br {
       margin-bottom: 5px;
     }
+    
+    /* Panchanga Details Section */
+    .panchanga-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+    
+    /* North Indian Chart Styles */
+    .north-indian-chart-container {
+      position: relative;
+      width: 600px;
+      height: 600px;
+      margin: 20px auto;
+      border: 2px solid #333;
+    }
+    
+    .north-indian-chart {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="100" height="100" stroke="black" fill="transparent" stroke-width="1"/><line x1="0" y1="0" x2="100" y2="100" stroke="black" stroke-width="1"/><line x1="100" y1="0" x2="0" y2="100" stroke="black" stroke-width="1"/><line x1="0" y1="50" x2="50" y2="0" stroke="black" stroke-width="1"/><line x1="50" y1="0" x2="100" y2="50" stroke="black" stroke-width="1"/><line x1="100" y1="50" x2="50" y2="100" stroke="black" stroke-width="1"/><line x1="50" y1="100" x2="0" y2="50" stroke="black" stroke-width="1"/></svg>');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    
+    /* North Indian Chart - True Geometric House Positions */
+    .ni-house { width: 18%; height: 18%; position: absolute; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 15px; background: rgba(255,255,255,0.85); border-radius: 8px; pointer-events: none; }
+    /* Center diamond (H1/Lagna) */
+    .ni-house-1 { top: 8%; left: 40%; }
+    /* Top triangle (H2) */
+    .ni-house-2 { top: 1%; left: 15%; }
+    /* Top-right kite (H3) */
+    .ni-house-3 { top: 10%; left: 1%; }
+    /* Right triangle (H4) */
+    .ni-house-4 { top: 45%; left: 15%; }
+    /* Bottom-right kite (H5) */
+    .ni-house-5 { top: 66%; left: 1%; }
+    /* Bottom triangle (H6) */
+    .ni-house-6 { top: 85%; left: 15%; }
+    /* Bottom-left kite (H7) */
+    .ni-house-7 { top: 66%; left: 40%; }
+    /* Left triangle (H8) */
+    .ni-house-8 { top: 85%; left: 65%; }
+    /* Top-left kite (H9) */
+    .ni-house-9 { top: 66%; left: 85%; }
+    /* Top-left corner (H10) */
+    .ni-house-10 { top: 45%; left: 65%; }
+    /* Top-right corner (H11) */
+    .ni-house-11 { top: 10%; left: 85%; }
+    /* Bottom-right corner (H12) */
+    .ni-house-12 { top: 1%; left: 65%; }
+    
+    .ni-house .sign {
+      font-weight: bold;
+      color: #e53935;
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+    
+    .ni-house .planets {
+      font-size: 11px;
+      line-height: 1.2;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
+    }
+    
+    .ni-house .planet {
+      display: inline-block;
+      background: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 3px;
+      margin: 0;
+      font-weight: bold;
+      border: 1px solid #ccc;
+    }
+
+    .lagna-house {
+      font-weight: bold;
+    }
+    .lagna-house .sign {
+      color: #000;
+      text-decoration: underline;
+    }
+
+    .planet-list {
+      margin-top: 20px;
+    }
+    
+    .planet-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .retrograde {
+      color: red;
+      font-weight: bold;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .error {
+      color: red;
+      text-align: center;
+      padding: 10px;
+      background: #ffe6e6;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    
+    /* Panchanga Results Styling */
+    .panchanga-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .panchanga-card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .panchanga-card h3 {
+      margin-top: 0;
+      color: #007bff;
+      font-size: 1.1em;
+    }
+    
+    .panchanga-card p {
+      margin: 5px 0;
+      font-size: 0.95em;
+    }
+    
+    .panchanga-card strong {
+      color: #333;
+    }
   </style>
   <link rel="icon" type="image/png" href="/image/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
@@ -269,22 +422,30 @@
           
           <div class="form-group">
             <label for="tz">Timezone:</label>
-            <input type="text" id="tz" placeholder="e.g. America/New_York" required>
+            <select id="tz" required>
+              <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+              <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+              <option value="America/New_York">America/New_York (EST)</option>
+              <option value="Europe/London">Europe/London (GMT)</option>
+              <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+              <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+            </select>
           </div>
           
           <div class="form-group">
-            <label for="place">Place (Latitude, Longitude):</label>
-            <input type="text" id="place" placeholder="e.g. 28.6139,77.2090" required>
+            <label for="place">Place:</label>
+            <input type="text" id="place" placeholder="Enter city name" required>
           </div>
           
           <div class="form-group">
-            <label for="ayanamsa">Ayanāmsa:</label>
+            <label for="ayanamsa">Ayanamsa:</label>
             <select id="ayanamsa">
+              <option value="1">Lahiri</option>
               <option value="0">Fagan/Bradley</option>
-              <option value="1" selected>Lahiri</option>
               <option value="2">DeLu</option>
               <option value="3">Raman</option>
               <option value="4">Krishnamurti</option>
+              <option value="5" selected>Pushya Paksha</option>
               <option value="6">ED50</option>
               <option value="7">Dehant</option>
             </select>
@@ -295,8 +456,29 @@
       </div>
       
       <div class="chart-section">
-        <h2>Panchanga Results</h2>
-        <div id="messages"></div>
+        <h2>Current Time Chart (Kundali)</h2>
+        <div id="loading" class="loading" style="display: none;">Calculating panchanga...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="chartContainer" style="display: none;">
+          <div class="north-indian-chart-container">
+            <div class="north-indian-chart" id="northIndianChart">
+              <!-- Houses will be dynamically generated here -->
+            </div>
+          </div>
+          
+          <div class="planet-list" id="planetList"></div>
+          
+          <div id="lagnaInfo"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panchanga Details Section -->
+    <div id="panchangaDetails" style="display: none;">
+      <div class="panchanga-container">
+        <h2>Panchanga Details</h2>
+        <div id="panchangaResults"></div>
       </div>
     </div>
   </div>
@@ -304,8 +486,15 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket     = io();
-    const messages   = document.getElementById('messages');
     const form       = document.getElementById('panchangaForm');
+    const loading    = document.getElementById('loading');
+    const error      = document.getElementById('error');
+    const chartContainer = document.getElementById('chartContainer');
+    const northIndianChart = document.getElementById('northIndianChart');
+    const planetList = document.getElementById('planetList');
+    const lagnaInfo = document.getElementById('lagnaInfo');
+    const panchangaDetails = document.getElementById('panchangaDetails');
+    const panchangaResults = document.getElementById('panchangaResults');
     const dateInput  = document.getElementById('date');
     const timeInput  = document.getElementById('time');
     const tzInput    = document.getElementById('tz');
@@ -376,25 +565,14 @@
         });
     }
 
-
-
-    function appendMessage(html) {
-      const d = document.createElement('div');
-      d.classList.add('message');
-      d.innerHTML = html;
-      messages.appendChild(d);
-      messages.scrollTop = messages.scrollHeight;
-    }
-
-    // Check authentication on page load
+    // Pre-fill form with current date/time and timezone
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
       
-      // prefill
       const now = new Date();
-      dateInput.value = now.toISOString().slice(0,10);
-      timeInput.value = now.toTimeString().slice(0,5);
-      tzInput.value   = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (dateInput) dateInput.value = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      if (timeInput) timeInput.value = now.toTimeString().slice(0, 5); // HH:MM
+      if (tzInput) tzInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
           placeInput.value = `${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`;
@@ -402,49 +580,211 @@
       }
     });
 
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
+    // Form submission
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const date = dateInput.value;
+      const time = timeInput.value;
+      const timezone = tzInput.value;
+      const place = placeInput.value;
+      const ayanamsa = ayanInput.value;
+      
+      if (!date || !time || !timezone || !place) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      // Show loading
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      chartContainer.style.display = 'none';
+      panchangaDetails.style.display = 'none';
+      
+      // Send panchanga calculation request
       socket.emit('calculatePanchanga', {
-        date:     dateInput.value,
-        time:     timeInput.value,
-        timezone: tzInput.value,
-        place:    placeInput.value,
-        ayanamsa: ayanInput.value
+        date: date,
+        time: time,
+        timezone: timezone,
+        place: place,
+        ayanamsa: ayanamsa
       });
     });
-
-    socket.on('panchangaCalculated', data => {
-      console.log('Payload:', data);
-      const {
-        date, time, timezone, place, ayanamsaUsed,
-        sunrise, sunset, tithi, nakshatra, yoga, karana1, karana2,
-        paksha, weekday, amantaMonth, purnimantaMonth, moonSign, sunSign
-      } = data;
-
-      appendMessage(`
-        <div class="panchanga">
-          <strong>Pañcāṅga for ${date} ${time} (${timezone}) @ ${place}:</strong><br/>
-          • Ayanāmsa: ${ayanamsaUsed}<br/>
-          • Sunrise: ${sunrise}<br/>
-          • Sunset: ${sunset}<br/>
-          • Tithi: ${tithi.name} up to ${tithi.endTime}<br/>
-          • Nakṣatra: ${nakshatra.name} up to ${nakshatra.endTime}<br/>
-          • Yoga: ${yoga.name} up to ${yoga.endTime}<br/>
-          • Karana 1: ${karana1.name} up to ${karana1.endTime}<br/>
-          • Karana 2: ${karana2.name} up to ${karana2.endTime}<br/>
-          • Pakṣa: ${paksha}<br/>
-          • Vāra: ${weekday}<br/>
-          • Amanta Month: ${amantaMonth}<br/>
-          • Pūrṇimanta Month: ${purnimantaMonth}<br/>
-          • Moon Sign: ${moonSign}<br/>
-          • Sun Sign: ${sunSign}<br/>
+    
+    // Socket event handlers
+    socket.on('panchangaCalculated', (data) => {
+      console.log('Panchanga calculated:', data);
+      loading.style.display = 'none';
+      
+      if (data.error) {
+        error.textContent = data.error;
+        error.style.display = 'block';
+        return;
+      }
+      
+      // Display chart
+      displayChart(data);
+      
+      // Display panchanga details
+      displayPanchanga(data);
+    });
+    
+    socket.on('errorMessage', (msg) => {
+      console.log('Error received:', msg);
+      loading.style.display = 'none';
+      error.textContent = msg;
+      error.style.display = 'block';
+    });
+    
+    function displayChart(data) {
+      chartContainer.style.display = 'block';
+      northIndianChart.innerHTML = '';
+      planetList.innerHTML = '';
+      lagnaInfo.innerHTML = '';
+      
+      // Display Ayanamsa and Lagna info
+      lagnaInfo.innerHTML = `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #007bff;">
+          <h3 style="margin-top: 0; color: #007bff;">Chart Information</h3>
+          <p><strong>Date & Time:</strong> ${data.date} ${data.time}</p>
+          <p><strong>Place:</strong> ${data.place}</p>
+          <p><strong>Timezone:</strong> ${data.timezone}</p>
+          <p><strong>Ayanamsa:</strong> ${data.ayanamsaUsed || 'Not specified'}</p>
         </div>
-      `);
-    });
+        
+        <h3>Lagna (Ascendant)</h3>
+        <p><strong>${data.lagna.sign}</strong> ${data.lagna.degree.toFixed(2)}°</p>
+        <p>Longitude: ${data.lagna.longitude.toFixed(2)}°</p>
+      `;
 
-    socket.on('errorMessage', msg => {
-      appendMessage(`<span style="color:red;">Error: ${msg}</span>`);
-    });
+      // North Indian house order: top center (Lagna), then anticlockwise
+      const houseOrder = [1,2,3,4,5,6,7,8,9,10,11,12];
+      const chart = document.getElementById('northIndianChart');
+      chart.innerHTML = '';
+
+      // Get Lagna rashi number
+      const lagnaRashi = data.lagna.signNumber;
+
+      houseOrder.forEach((houseNum, idx) => {
+        // Compute rashi number for this house (anticlockwise from Lagna)
+        const rashiNumber = ((lagnaRashi + idx - 1) % 12) + 1;
+        // Find all planets in this rashi, excluding Neptune, Uranus, Pluto
+        const planetNames = Object.entries(data.planets)
+          .filter(([pname, p]) => p.signNumber === rashiNumber && !['Neptune', 'Uranus', 'Pluto'].includes(pname))
+          .map(([pname, p]) => {
+            const retro = p.isRetrograde ? '(R)' : '';
+            return `<span class="planet">${pname.substring(0, 2)}${retro}</span>`;
+          }).join(' ');
+        const houseDiv = document.createElement('div');
+        houseDiv.className = `ni-house ni-house-${houseNum}`;
+        if (houseNum === 1) houseDiv.classList.add('lagna-house');
+        houseDiv.innerHTML = `
+          <div class="sign">${rashiNumber}</div>
+          <div class="planets">${planetNames}</div>
+        `;
+        chart.appendChild(houseDiv);
+      });
+
+      // Display planet list, excluding Neptune, Uranus, Pluto
+      planetList.innerHTML = '<h3>Lagna & Planetary Details</h3>';
+      // Helper: Nakshatra names
+      const nakshatraNames = [
+        'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra',
+        'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni',
+        'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha',
+        'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha',
+        'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
+      ];
+      function getNakshatra(longitude) {
+        const idx = Math.floor((longitude % 360) / (360 / 27));
+        return nakshatraNames[idx];
+      }
+      function getPada(longitude) {
+        const nakLen = 360 / 27;
+        const posInNak = longitude % nakLen;
+        return Math.floor((posInNak / nakLen) * 4) + 1;
+      }
+      // Build table rows
+      let tableRows = '';
+      // Lagna
+      tableRows += `<tr><td>Lagna</td><td>${data.lagna.sign}</td><td>${data.lagna.degree.toFixed(2)}</td><td>${getNakshatra(data.lagna.longitude)}</td><td>${getPada(data.lagna.longitude)}</td></tr>`;
+      // Planets
+      for (const [planet, info] of Object.entries(data.planets)) {
+        if (["Neptune", "Uranus", "Pluto"].includes(planet)) continue;
+        const retrograde = info.isRetrograde ? ' (R)' : '';
+        tableRows += `<tr><td>${planet}${retrograde}</td><td>${info.sign}</td><td>${info.degree.toFixed(2)}</td><td>${getNakshatra(info.longitude)}</td><td>${getPada(info.longitude)}</td></tr>`;
+      }
+      // Create table
+      planetList.innerHTML = `
+        <h3>Lagna & Planetary Details</h3>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+          <thead>
+            <tr style="background:#f0f0f0;">
+              <th>Body</th><th>Rashi</th><th>Degrees</th><th>Nakshatra</th><th>Pada</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      `;
+    }
+    
+    function displayPanchanga(data) {
+      panchangaDetails.style.display = 'block';
+      
+      // Format panchanga results in a grid layout
+      const panchangaHTML = `
+        <div class="panchanga-results">
+          <div class="panchanga-card">
+            <h3>📅 Tithi (Lunar Day)</h3>
+            <p><strong>Tithi:</strong> ${data.tithi || 'N/A'}</p>
+            <p><strong>Tithi Number:</strong> ${data.tithiNumber || 'N/A'}</p>
+            <p><strong>Paksha:</strong> ${data.paksha || 'N/A'}</p>
+          </div>
+          
+          <div class="panchanga-card">
+            <h3>🌙 Nakshatra (Lunar Mansion)</h3>
+            <p><strong>Nakshatra:</strong> ${data.nakshatra || 'N/A'}</p>
+            <p><strong>Nakshatra Number:</strong> ${data.nakshatraNumber || 'N/A'}</p>
+            <p><strong>Pada:</strong> ${data.pada || 'N/A'}</p>
+          </div>
+          
+          <div class="panchanga-card">
+            <h3>⭐ Yoga (Sun-Moon Combination)</h3>
+            <p><strong>Yoga:</strong> ${data.yoga || 'N/A'}</p>
+            <p><strong>Yoga Number:</strong> ${data.yogaNumber || 'N/A'}</p>
+          </div>
+          
+          <div class="panchanga-card">
+            <h3>🌅 Karana (Half Tithi)</h3>
+            <p><strong>Karana:</strong> ${data.karana || 'N/A'}</p>
+            <p><strong>Karana Number:</strong> ${data.karanaNumber || 'N/A'}</p>
+          </div>
+          
+          <div class="panchanga-card">
+            <h3>🌞 Vara (Weekday)</h3>
+            <p><strong>Vara:</strong> ${data.vara || 'N/A'}</p>
+            <p><strong>Weekday:</strong> ${data.weekday || 'N/A'}</p>
+          </div>
+          
+          <div class="panchanga-card">
+            <h3>🌍 Mas (Month)</h3>
+            <p><strong>Mas:</strong> ${data.mas || 'N/A'}</p>
+            <p><strong>Season:</strong> ${data.season || 'N/A'}</p>
+          </div>
+        </div>
+        
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2196f3;">
+          <h3 style="margin-top: 0; color: #1976d2;">Additional Information</h3>
+          <p><strong>Julian Day:</strong> ${data.julianDay || 'N/A'}</p>
+          <p><strong>Local Time:</strong> ${data.localTime || 'N/A'}</p>
+          <p><strong>UTC Time:</strong> ${data.utcTime || 'N/A'}</p>
+          <p><strong>Latitude:</strong> ${data.latitude || 'N/A'}°</p>
+          <p><strong>Longitude:</strong> ${data.longitude || 'N/A'}°</p>
+        </div>
+      `;
+      
+      panchangaResults.innerHTML = panchangaHTML;
+    }
   </script>
 </body>
 </html>
